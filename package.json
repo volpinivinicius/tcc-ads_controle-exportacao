@@ -1,0 +1,27 @@
+{
+  "name": "tcc-ads_controle-exportacao",
+  "version": "1.0.0",
+  "description": "```mermaid\r flowchart TD\r     SP[System Permission]\r     CPP[Company Permission Policy]\r     AR[Access Role]\r     U[User]\r     C[Company]",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/volpinivinicius/tcc-ads_controle-exportacao.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/volpinivinicius/tcc-ads_controle-exportacao/issues"
+  },
+  "homepage": "https://github.com/volpinivinicius/tcc-ads_controle-exportacao#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.9.3"
+  }
+}
