@@ -8,4 +8,9 @@
  * Ensures that User management operations respect the
  * authorized scope of the requesting User, keeping this
  * logic isolated from the User Controller.
+ *
+ * Delegates to the Access Role Service the validation of
+ * AccessRole assignment rules, including the restriction that a
+ * User currently holding a system-level AccessRole can only have
+ * it changed, in either direction, by the System Administrator.
  */
