@@ -15,7 +15,15 @@
  * For ASSIGNED_SHIPMENT AccessRoles, also validates the link
  * between the User's Company and the specific Shipment
  * responsibility (such as carrier or warehouse) that determines
- * which Shipments the User is allowed to view.
+ * which Shipments the User is allowed to view. When a Shipment
+ * has separate exportStage and importStage subdocuments, this
+ * link is resolved per stage, not at the Shipment level: a
+ * Company assigned as carrier or warehouse on only one stage
+ * grants its Users visibility into that stage alone. This keeps
+ * two unrelated external Companies, such as the carrier handling
+ * the export leg and the carrier handling the import leg of the
+ * same INTERCOMPANY Shipment, from seeing each other's side of
+ * the process.
  *
  * Also protects Users who currently hold a SYSTEM-scoped
  * AccessRole (such as Service Center users) from having their

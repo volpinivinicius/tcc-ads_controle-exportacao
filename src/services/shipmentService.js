@@ -17,7 +17,13 @@
  * assignment of other logistics chain participants, such as
  * carrier and warehouse, ensuring each is restricted to viewing
  * only the Shipments where their Company has been assigned that
- * responsibility.
+ * responsibility. When the Shipment has separate exportStage and
+ * importStage subdocuments, this restriction is resolved per
+ * stage: a Company assigned as carrier or warehouse on the
+ * exportStage only grants visibility into that stage, not into
+ * the importStage, even when both stages belong to the same
+ * Shipment. Responses returned to these Users are limited to the
+ * stage(s) their Company is assigned to.
  *
  * Derives the Shipment's processType classification from the
  * isGroupCompany flag of its exporter and importer: EXPORT when
