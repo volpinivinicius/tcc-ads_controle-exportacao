@@ -11,7 +11,7 @@
  * carriers and warehousing companies, as the system evolves to
  * cover the full shipment chain.
  *
- * An isIntercompany flag indicates whether the company belongs
+ * An isGroupCompany flag indicates whether the company belongs
  * to the corporate group served by the system,
  * as opposed to being an external company (such as a foreign
  * buyer, or a third-party carrier or warehouse).
@@ -20,7 +20,7 @@
  * legally hosted within one of the group's own companies (an
  * exporter and/or importer like any other), whose users are
  * distinguished not by the company they belong to, but by
- * holding a system-level AccessRole that grants visibility over
+ * holding a SYSTEM-scoped AccessRole that grants visibility over
  * shipments across the entire group, rather than only their own
  * company's shipments. See the AccessRole schema for details.
  */

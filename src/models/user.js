@@ -8,9 +8,11 @@
  * The user's Company reflects their legal employment relationship
  * and does not by itself limit their visibility in the system: a
  * user's actual scope of access is determined by their assigned
- * AccessRole, which can be company-level (restricted to their own
- * Company's data) or system-level (spanning the entire group, as
- * is the case for Service Center users).
+ * AccessRole's scope — COMPANY (restricted to their own Company's
+ * data), ASSIGNED_SHIPMENT (restricted to Shipments where their
+ * Company has an assigned responsibility, such as carrier or
+ * warehouse), or SYSTEM (spanning the entire group, as is the
+ * case for Service Center users).
  *
  * User access is controlled through the assigned AccessRole
  * rather than through permissions defined directly on the user.

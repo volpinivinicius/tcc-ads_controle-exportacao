@@ -14,7 +14,7 @@
  * warehousing companies, as the system grows to cover the full
  * shipment chain.
  *
- * Also exposes the isIntercompany flag, which distinguishes
+ * Also exposes the isGroupCompany flag, which distinguishes
  * Companies belonging to the corporate group from external
  * Companies it only relates to through Shipments, such as
  * foreign buyers or third-party carriers and warehouses.

@@ -18,9 +18,9 @@
  * exportStage and importStage subdocuments, allowing, for
  * example, different carriers on the export and import legs.
  *
- * Exposes the Shipment's process classification (export, import,
- * or intercompany/global process), derived from whether its
- * exporter and/or importer are group Companies, for use in
- * reports and dashboards, together with the overall status
- * consolidated from both stages when applicable.
+ * Exposes the Shipment's processType classification (EXPORT,
+ * IMPORT, or INTERCOMPANY), derived from whether its exporter
+ * and/or importer are group Companies, for use in reports and
+ * dashboards, together with the overall status consolidated from
+ * both stages when applicable.
  */

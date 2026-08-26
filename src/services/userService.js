@@ -11,6 +11,6 @@
  *
  * Delegates to the Access Role Service the validation of
  * AccessRole assignment rules, including the restriction that a
- * User currently holding a system-level AccessRole can only have
+ * User currently holding a SYSTEM-scoped AccessRole can only have
  * it changed, in either direction, by the System Administrator.
  */
