@@ -10,7 +10,7 @@
  * warehousing companies, keeping this logic isolated from the
  * Company Controller.
  *
- * Also manages the isIntercompany flag, which identifies
+ * Also manages the isGroupCompany flag, which identifies
  * Companies belonging to the corporate group.
  * This flag is used to validate that a Shipment's exporter or
  * importer is always a group Company, regardless of how many
