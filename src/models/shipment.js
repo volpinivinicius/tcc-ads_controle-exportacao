@@ -46,4 +46,21 @@
  * shipment's top level or within a single relevant stage. An
  * overall status, either stored or derived from the two stages,
  * provides a consolidated view of the shipment as a whole.
+ *
+ * A shipment is itself the commercial invoice for its process.
+ * Its physical cargo is linked to one or more Containers through
+ * the ShipmentContainerAllocation, which resolves the
+ * many-to-many relationship between shipments and containers: a
+ * container can carry cargo from more than one shipment, and a
+ * shipment's cargo can be split across more than one container.
+ * Containers are, in turn, linked to a Booking made with an
+ * ocean carrier, whose deadlines apply uniformly to all of its
+ * containers. See the Booking and Container schemas for details.
+ *
+ * A shipment also maintains an activity feed of ShipmentNotes,
+ * combining system-generated entries (such as status changes or
+ * a Booking deadline update affecting one of the shipment's
+ * allocated containers) with notes written manually by users,
+ * which can be marked public or private. See the ShipmentNote
+ * schema for details.
  */
