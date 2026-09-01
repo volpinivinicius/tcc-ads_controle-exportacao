@@ -43,4 +43,31 @@
  * Shipment as a whole. This is what allows, for example, an
  * export team in Brazil and an import team in the United States
  * to operate on the same INTERCOMPANY Shipment.
+ *
+ * Validates that a Booking is only linked to a Shipment whose
+ * modal is MARITIME, rejecting the link otherwise, and derives
+ * whether a MARITIME Shipment is still awaiting its Booking from
+ * the presence of that link, rather than from a status value.
+ *
+ * Enforces the Shipment's status sequence, but does not trigger
+ * any transition automatically: in this first version, every
+ * status change, for every value in the sequence, is a manual
+ * action performed by a user, even when other data would suggest
+ * the shipment is ready to move on (such as a Booking being
+ * linked, a checklist item being completed, or cargo being
+ * recorded as collected elsewhere). This service validates that
+ * a manually requested transition is coherent with the sequence
+ * — for example, that status 1 (AWAITING_INVOICE_RELEASE) and 2
+ * (PARTIALLY_INVOICED) can alternate back and forth while cargo
+ * is invoiced in more than one batch, only advancing to status 3
+ * once invoicing is complete; that status 3
+ * (AWAITING_COLLECTION_OR_SHIPPING) carries a meaning that
+ * depends on the Shipment's modal (collection for ROAD/AIR,
+ * vessel loading for MARITIME) without needing a separate status
+ * value; that status 5 (AWAITING_DOCUMENT_ISSUANCE) is only a
+ * valid choice if the Shipment Checklist still has a pending
+ * item after shipping, and can be skipped otherwise; and that
+ * status 6 (AWAITING_OWNERSHIP_TRANSFER) precedes status 7
+ * (CLOSED), with its expected duration depending on the
+ * Shipment's Incoterm.
  */

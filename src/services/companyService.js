@@ -22,3 +22,48 @@
  * scope is granted to users of a group Company. See the Access
  * Role Service for details.
  */
+
+const Company = require("../models/company");
+ 
+function notFound() {
+  const error = new Error("Company not found");
+  error.status = 404;
+  return error;
+}
+ 
+async function createCompany(data) {
+  return Company.create(data);
+}
+ 
+async function listCompanies() {
+  return Company.find();
+}
+ 
+async function getCompanyById(id) {
+  const company = await Company.findById(id);
+  if (!company) throw notFound();
+  return company;
+}
+ 
+async function updateCompany(id, data) {
+  const company = await Company.findByIdAndUpdate(id, data, {
+    new: true,
+    runValidators: true,
+  });
+  if (!company) throw notFound();
+  return company;
+}
+ 
+async function deleteCompany(id) {
+  const company = await Company.findByIdAndDelete(id);
+  if (!company) throw notFound();
+  return company;
+}
+ 
+module.exports = {
+  createCompany,
+  listCompanies,
+  getCompanyById,
+  updateCompany,
+  deleteCompany,
+};

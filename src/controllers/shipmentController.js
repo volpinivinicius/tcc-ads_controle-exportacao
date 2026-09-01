@@ -23,4 +23,20 @@
  * and/or importer are group Companies, for use in reports and
  * dashboards, together with the overall status consolidated from
  * both stages when applicable.
+ *
+ * Handles the Shipment's modal (MARITIME, AIR, ROAD, or OTHER)
+ * and its 8-step status lifecycle (0 NEW through 7 CLOSED). In
+ * this first version, every status change is made manually by a
+ * user, including advancing past status 1/2 (which can alternate
+ * during partial invoicing) and skipping status 5 when no
+ * required document is pending after shipping; the system does
+ * not transition status automatically. A Booking can only be
+ * linked to MARITIME Shipments; whether such a Shipment is still
+ * awaiting its Booking is derived from that link rather than
+ * tracked as a separate status.
+ *
+ * Also manages the Shipment's document checklist, letting the
+ * user define which documents are required at creation and
+ * exposing their completion state. See the Shipment Checklist
+ * Item Controller for details.
  */
