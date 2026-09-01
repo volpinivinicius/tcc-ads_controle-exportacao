@@ -5,11 +5,15 @@
  */
  
 const express = require("express");
-const router = express.Router();
+const companyRoutes = require("./companyRoutes");
 
+
+const router = express.Router();
 
 router.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
+
+router.use("/companies", companyRoutes);
  
 module.exports = router;
