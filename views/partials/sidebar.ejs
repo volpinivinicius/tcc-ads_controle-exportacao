@@ -1,0 +1,15 @@
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark"></span>
+        <span class="brand-name">Minhas Exportações</span>
+      </div>
+      <nav>
+        <a href="/" class="<%= activePage === 'dashboard' ? 'active' : '' %>">Dashboard</a>
+        <a href="/shipments" class="<%= activePage === 'shipments' ? 'active' : '' %>">Embarques</a>
+        <a href="/bookings" class="<%= activePage === 'bookings' ? 'active' : '' %>">Bookings</a>
+        <a href="/companies" class="<%= activePage === 'companies' ? 'active' : '' %>">Empresas</a>
+        <a href="/users" class="<%= activePage === 'users' ? 'active' : '' %>">Usuários</a>
+        <a href="/access-roles" class="<%= activePage === 'access-roles' ? 'active' : '' %>">Perfis de acesso</a>
+      </nav>
+    </aside>
+    <main class="content">
