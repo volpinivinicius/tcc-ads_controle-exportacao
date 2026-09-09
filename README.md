@@ -18,7 +18,7 @@ Because both the exporter and the importer of a shipment can be group companies,
 
 ## Beyond the group: other logistics chain participants
 
-While the project's original scope is the group's own export and import processes managed through its Service Center, the underlying model, companies with business roles governed by Access Roles and Permission Policies, is intentionally not limited to exporters and importers. It is designed to extend to other participants of the logistics chain, such as carriers and warehousing companies, each gaining visibility only into the shipments where they have been assigned that responsibility.
+While the project's original scope is the group's own export and import processes managed through its Service Center, the underlying model, companies with business roles governed by Access Roles and Permission Policies, is not limited to exporters and importers. A Company's businessRoles already include CARRIER and WAREHOUSE alongside EXPORTER and IMPORTER, so other participants of the logistics chain can be registered today, each gaining visibility only into the shipments where they have been assigned that responsibility.
 
 ## Authorization and Access Control Architecture
 

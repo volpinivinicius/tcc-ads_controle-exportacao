@@ -1,13 +1,27 @@
 /**
- * Company Permission Policy Schema
- *
- * Defines which system permissions a company is allowed to
- * delegate through its access roles.
- *
- * These policies are controlled by the System Administrator and
- * establish the maximum level of permissions that a company's
- * administrators can assign to their users.
- *
- * A Company Administrator can only assign permissions that are
- * authorized by the company's permission policy.
+ * One policy per company (unique). See README > Authorization
+ * and Access Control Architecture > Permission Delegation for
+ * the business rules.
  */
+
+const mongoose = require("mongoose");
+
+const companyPermissionPolicySchema = new mongoose.Schema(
+  {
+    company: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+      unique: true,
+    },
+    allowedPermissions: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "SystemPermission" },
+    ],
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model(
+  "CompanyPermissionPolicy",
+  companyPermissionPolicySchema
+);
