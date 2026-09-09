@@ -1,18 +1,53 @@
 /**
- * User Controller
- *
- * Manages the creation, retrieval, update, and removal of Users
- * within the system.
- *
- * Each User is associated with a Company and an AccessRole, and
- * operations performed here must respect the permissions of the
- * requesting User, ensuring they only manage Users within their
- * authorized scope.
- *
- * When changing a User's AccessRole, defers to the restriction
- * enforced by the Access Role Service: a User currently holding
- * a SYSTEM-scoped AccessRole (such as a Service Center user) can
- * only have that AccessRole changed by the System Administrator,
- * even by a Company Administrator of the Company that legally
- * hosts them.
+ * CRUD for User. See README > Users linked to multiple companies
+ * for the links (company/accessRole pairs) being validated.
  */
+
+const userService = require("../services/userService");
+
+async function create(req, res, next) {
+  try {
+    const user = await userService.createUser(req.body);
+    res.status(201).json(user);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function list(req, res, next) {
+  try {
+    const users = await userService.listUsers();
+    res.json(users);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getById(req, res, next) {
+  try {
+    const user = await userService.getUserById(req.params.id);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function update(req, res, next) {
+  try {
+    const user = await userService.updateUser(req.params.id, req.body);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function remove(req, res, next) {
+  try {
+    await userService.deleteUser(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { create, list, getById, update, remove };
