@@ -1,19 +1,61 @@
 /**
- * User Schema
- *
- * Represents a user who can access and interact with the system.
- * Each user is associated with a company and an access role,
- * which determines the permissions available to that user.
- *
- * The user's Company reflects their legal employment relationship
- * and does not by itself limit their visibility in the system: a
- * user's actual scope of access is determined by their assigned
- * AccessRole's scope — COMPANY (restricted to their own Company's
- * data), ASSIGNED_SHIPMENT (restricted to Shipments where their
- * Company has an assigned responsibility, such as carrier or
- * warehouse), or SYSTEM (spanning the entire group, as is the
- * case for Service Center users).
- *
- * User access is controlled through the assigned AccessRole
- * rather than through permissions defined directly on the user.
+ * links: one or more { company, accessRole } pairs — a user can
+ * act on behalf of more than one company (e.g. export team in
+ * Brazil + import team in the US). See README > Users linked to
+ * multiple companies. Password is hashed before save and
+ * excluded from query results and JSON output.
  */
+
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+
+const userLinkSchema = new mongoose.Schema({
+  company: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Company",
+    required: true,
+  },
+  accessRole: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "AccessRole",
+    required: true,
+  },
+});
+
+const userSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: { type: String, required: true, select: false },
+    links: {
+      type: [userLinkSchema],
+      required: true,
+      validate: (links) => links.length > 0,
+    },
+  },
+  { timestamps: true }
+);
+
+userSchema.pre("save", async function hashPassword() {
+  if (!this.isModified("password")) return;
+  this.password = await bcrypt.hash(this.password, 10);
+});
+
+userSchema.methods.comparePassword = function comparePassword(candidate) {
+  return bcrypt.compare(candidate, this.password);
+};
+
+userSchema.set("toJSON", {
+  transform: (doc, ret) => {
+    delete ret.password;
+    return ret;
+  },
+});
+
+module.exports = mongoose.model("User", userSchema);

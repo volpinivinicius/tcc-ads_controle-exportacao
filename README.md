@@ -10,6 +10,14 @@ What distinguishes a Service Center user from an ordinary commercial or purchasi
 
 Because a SYSTEM-scoped Access Role grants access far beyond a single company, only the System Administrator can create or assign one. A Company Administrator, even of the company that legally hosts the Service Center, can only create and assign COMPANY or ASSIGNED_SHIPMENT Access Roles for their own company, and cannot change the Access Role of a user who currently holds a SYSTEM-scoped Access Role, in either direction. This prevents Service Center-level access from being granted, revoked, or altered by anyone other than the System Administrator.
 
+## Users linked to multiple companies
+
+A User is not limited to a single company. Since the same person may need to act on behalf of more than one group company — for example, handling exports for a Brazilian entity and imports for a US entity of the same group — a User holds a list of links, each pairing one company with one Access Role. A user with a single responsibility simply has one link; a Service Center user also has a single link, but one whose Access Role happens to be SYSTEM-scoped, which is why it already grants group-wide visibility without needing more than one link.
+
+Each link's Access Role must belong to the same company as that link, unless the Access Role is SYSTEM-scoped (which belongs to no company). A User cannot have more than one link to the same company.
+
+Links are always evaluated in isolation from one another: authorization is never "does this user have permission X anywhere", it is "does this user have a link to this specific company that grants permission X". A broader Access Role on one link never carries over to another link with a different, more limited company — the same principle already used to keep a carrier's export-stage and import-stage visibility separate on an INTERCOMPANY shipment, applied here one level up, between a user's links to different companies.
+
 ## Group companies and external companies
 
 Every company registered in the system is either a group company or an external one, tracked through the isGroupCompany flag. A shipment's exporter and importer are always required to include at least one group company; a shipment where neither is a group company is invalid. External companies, such as a foreign buyer or a third-party carrier or warehouse, participate in a shipment without being managed as part of the group.
