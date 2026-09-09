@@ -20,6 +20,41 @@ Because both the exporter and the importer of a shipment can be group companies,
 
 While the project's original scope is the group's own export and import processes managed through its Service Center, the underlying model, companies with business roles governed by Access Roles and Permission Policies, is not limited to exporters and importers. A Company's businessRoles already include CARRIER and WAREHOUSE alongside EXPORTER and IMPORTER, so other participants of the logistics chain can be registered today, each gaining visibility only into the shipments where they have been assigned that responsibility.
 
+## Shipment Lifecycle: Bookings, Containers, and Notes
+
+A shipment is itself the commercial invoice for its process. Its physical cargo is tracked through a separate logistics domain, built around three concepts: Booking, Container, and the allocation that links them to shipments.
+
+```mermaid
+flowchart TD
+    B[Booking]
+    CT[Container]
+    SCA[Shipment Container Allocation]
+    S[Shipment]
+    SN[Shipment Note]
+
+    B -->|has many| CT
+    CT -->|linked through| SCA
+    S -->|linked through| SCA
+    S -->|has many| SN
+    B -.->|deadline change generates| SN
+```
+
+## Booking and Container
+
+A Booking is the reservation made with an ocean carrier, identified by a single booking number. It carries the vessel, voyage, ports, estimated dates, and deadlines, such as cargo cutoff and document cutoff. These deadlines apply uniformly to every Container linked to that Booking; they are not duplicated per container.
+
+At the time a Booking is created, only the requested container quantity and type are known, for example, four 20ft containers, since the physical containers have not yet been picked up from the depot. Each Container is therefore registered progressively: it starts with only its size/type defined, and its containerNumber is filled in once the empty container is retrieved. This step is frequently carried out by the carrier or logistics operator responsible for the pickup, a concrete case of a User acting under an ASSIGNED_SHIPMENT Access Role. Unlike deadlines, which live on the Booking, each Container records its own realized operational dates (empty pickup, gate-in, return), since containers under the same Booking reach these milestones individually and at different times.
+
+## Linking shipments to containers
+
+A single Container can carry cargo from more than one Shipment, for example, two shipments each occupying half of the same container, and a single Shipment's cargo can be split across more than one Container. The Shipment Container Allocation resolves this many-to-many relationship, and is also the basis for an ASSIGNED_SHIPMENT Access Role's visibility into container data: a carrier or warehouse Company gains visibility into the Containers its assigned Shipments are allocated to, and no others.
+
+When a shipment has separate exportStage and importStage subdocuments (an INTERCOMPANY process handled on both sides), ASSIGNED_SHIPMENT visibility is resolved per stage, not for the shipment as a whole: a Company assigned as carrier or warehouse on only the exportStage sees that stage alone, never the importStage. This keeps two unrelated external companies, such as the carrier handling the export leg and the carrier handling the import leg of the same shipment, from seeing each other's side of the process.
+
+## Shipment activity feed
+
+Each Shipment maintains an activity feed of Shipment Notes, combining two kinds of entries: SYSTEM notes, generated automatically, such as a status change or a Booking deadline update affecting the shipment through one of its allocated containers; and USER notes, written manually by someone involved in the process, which can be marked public or private so that internal remarks are not necessarily exposed to external ASSIGNED_SHIPMENT users. A note can reference the specific Container or Booking it relates to, which matters because a shipment may only share part of its containers with a given Booking.
+
 ## Authorization and Access Control Architecture
 
 ### 1. Authorization Model

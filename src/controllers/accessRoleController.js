@@ -1,20 +1,53 @@
 /**
- * Access Role Controller
- *
- * Manages the creation, retrieval, update, and removal of
- * Access Roles, which group the SystemPermissions assigned
- * to Users.
- *
- * Ensures that COMPANY and ASSIGNED_SHIPMENT AccessRoles only
- * contain permissions allowed by the corresponding Company's
- * Permission Policy.
- *
- * The System Administrator can create and assign AccessRoles of
- * any scope (SYSTEM, COMPANY, or ASSIGNED_SHIPMENT); a Company
- * Administrator can only create and assign COMPANY or
- * ASSIGNED_SHIPMENT AccessRoles for their own Company. Since the
- * Service Center is represented as a SYSTEM-scoped AccessRole
- * rather than as a distinct Company type, this is also what
- * prevents a Company Administrator from granting Service
- * Center-level access to users of their own Company.
+ * CRUD for AccessRole. See README > The Service Center and >
+ * Permission Delegation for the scope rules being validated.
  */
+
+const accessRoleService = require("../services/accessRoleService");
+
+async function create(req, res, next) {
+  try {
+    const role = await accessRoleService.createAccessRole(req.body);
+    res.status(201).json(role);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function list(req, res, next) {
+  try {
+    const roles = await accessRoleService.listAccessRoles();
+    res.json(roles);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getById(req, res, next) {
+  try {
+    const role = await accessRoleService.getAccessRoleById(req.params.id);
+    res.json(role);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function update(req, res, next) {
+  try {
+    const role = await accessRoleService.updateAccessRole(req.params.id, req.body);
+    res.json(role);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function remove(req, res, next) {
+  try {
+    await accessRoleService.deleteAccessRole(req.params.id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { create, list, getById, update, remove };
