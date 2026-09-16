@@ -1,0 +1,25 @@
+<%- include('partials/head', { title: 'Usuários' }) %>
+<%- include('partials/sidebar', { activePage: 'users' }) %>
+      <h1>Usuários</h1>
+      <table class="data-table">
+        <thead>
+          <tr><th>Nome</th><th>E-mail</th><th>Vínculos (empresa · perfil)</th></tr>
+        </thead>
+        <tbody>
+          <% if (users.length === 0) { %>
+            <tr><td colspan="3">Nenhum usuário cadastrado ainda.</td></tr>
+          <% } %>
+          <% users.forEach(function(u) { %>
+            <tr>
+              <td><%= u.name %></td>
+              <td><%= u.email %></td>
+              <td>
+                <% u.links.forEach(function(link) { %>
+                  <div><%= link.company ? link.company.name : '—' %> · <%= link.accessRole ? (link.accessRole.name + ' (' + link.accessRole.scope + ')') : '—' %></div>
+                <% }); %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+<%- include('partials/footer') %>

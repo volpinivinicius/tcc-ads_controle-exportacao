@@ -1,0 +1,20 @@
+<%- include('partials/head', { title: 'Políticas de Permissão' }) %>
+<%- include('partials/sidebar', { activePage: 'company-permission-policies' }) %>
+      <h1>Políticas de Permissão</h1>
+      <table class="data-table">
+        <thead>
+          <tr><th>Empresa</th><th>Permissões liberadas</th></tr>
+        </thead>
+        <tbody>
+          <% if (policies.length === 0) { %>
+            <tr><td colspan="2">Nenhuma política cadastrada ainda.</td></tr>
+          <% } %>
+          <% policies.forEach(function(p) { %>
+            <tr>
+              <td><%= p.company ? p.company.name : '—' %></td>
+              <td><%= p.allowedPermissions.map(function(perm) { return perm.code; }).join(', ') %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+<%- include('partials/footer') %>
