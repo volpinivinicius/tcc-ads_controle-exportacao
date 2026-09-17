@@ -21,6 +21,10 @@ const catalog = [
   { code: "ACCESS_ROLE_CREATE", resource: "ACCESS_ROLE", description: "Create access roles" },
   { code: "ACCESS_ROLE_UPDATE", resource: "ACCESS_ROLE", description: "Update access roles" },
   { code: "ACCESS_ROLE_ASSIGN", resource: "ACCESS_ROLE", description: "Assign an access role to a user" },
+  { code: "ACCESS_ROLE_DELETE", resource: "ACCESS_ROLE", description: "Delete an access role" },
+
+  { code: "PERMISSION_POLICY_VIEW", resource: "PERMISSION_POLICY", description: "View a company's permission policy" },
+  { code: "PERMISSION_POLICY_MANAGE", resource: "PERMISSION_POLICY", description: "Create or update a company's permission policy" },
  
   { code: "SHIPMENT_VIEW", resource: "SHIPMENT", description: "View shipments" },
   { code: "SHIPMENT_CREATE", resource: "SHIPMENT", description: "Create shipments" },

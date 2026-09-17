@@ -1,11 +1,18 @@
 /**
  * See README > Authorization and Access Control Architecture >
  * Permission Delegation for the business rules this enforces.
+ *
+ * Authorization: this entire resource is SYSTEM-only — only the
+ * System Administrator manages a Company's Permission Policy, no
+ * delegation to Company Administrators. Enforced here (not just
+ * at the route level) so it also protects the server-rendered
+ * page, which calls this service directly.
  */
 
 const CompanyPermissionPolicy = require("../models/companyPermissionPolicy");
 const Company = require("../models/company");
 const SystemPermission = require("../models/systemPermission");
+const { assertCan } = require("./authorizationService");
 
 function notFound() {
   const error = new Error("Company permission policy not found");
@@ -34,18 +41,21 @@ async function validateReferences({ company, allowedPermissions }) {
   }
 }
 
-async function createPolicy(data) {
+async function createPolicy(data, user) {
+  assertCan(user, "PERMISSION_POLICY_MANAGE", null);
   await validateReferences(data);
   return CompanyPermissionPolicy.create(data);
 }
 
-async function listPolicies() {
+async function listPolicies(user) {
+  assertCan(user, "PERMISSION_POLICY_VIEW", null);
   return CompanyPermissionPolicy.find()
     .populate("company")
     .populate("allowedPermissions");
 }
 
-async function getPolicyByCompanyId(companyId) {
+async function getPolicyByCompanyId(companyId, user) {
+  assertCan(user, "PERMISSION_POLICY_VIEW", null);
   const policy = await CompanyPermissionPolicy.findOne({
     company: companyId,
   }).populate("allowedPermissions");
@@ -53,7 +63,8 @@ async function getPolicyByCompanyId(companyId) {
   return policy;
 }
 
-async function updatePolicyByCompanyId(companyId, data) {
+async function updatePolicyByCompanyId(companyId, data, user) {
+  assertCan(user, "PERMISSION_POLICY_MANAGE", null);
   await validateReferences(data);
   const policy = await CompanyPermissionPolicy.findOneAndUpdate(
     { company: companyId },
@@ -64,7 +75,8 @@ async function updatePolicyByCompanyId(companyId, data) {
   return policy;
 }
 
-async function deletePolicyByCompanyId(companyId) {
+async function deletePolicyByCompanyId(companyId, user) {
+  assertCan(user, "PERMISSION_POLICY_MANAGE", null);
   const policy = await CompanyPermissionPolicy.findOneAndDelete({
     company: companyId,
   });

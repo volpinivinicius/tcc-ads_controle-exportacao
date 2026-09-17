@@ -11,9 +11,13 @@ router.get("/", (req, res) => {
   res.render("dashboard", { title: "Dashboard" });
 });
 
+router.get("/profile", (req, res) => {
+  res.render("profile", { title: "Meu Perfil" });
+});
+
 router.get("/companies", async (req, res, next) => {
   try {
-    const companies = await companyService.listCompanies();
+    const companies = await companyService.listCompanies(req.user);
     res.render("companies", { title: "Empresas", companies });
   } catch (error) {
     next(error);
@@ -31,7 +35,7 @@ router.get("/system-permissions", async (req, res, next) => {
 
 router.get("/company-permission-policies", async (req, res, next) => {
   try {
-    const policies = await companyPermissionPolicyService.listPolicies();
+    const policies = await companyPermissionPolicyService.listPolicies(req.user);
     res.render("companyPermissionPolicies", {
       title: "Políticas de Permissão",
       policies,
@@ -43,7 +47,7 @@ router.get("/company-permission-policies", async (req, res, next) => {
 
 router.get("/access-roles", async (req, res, next) => {
   try {
-    const roles = await accessRoleService.listAccessRoles();
+    const roles = await accessRoleService.listAccessRoles(req.user);
     res.render("accessRoles", { title: "Perfis de Acesso", roles });
   } catch (error) {
     next(error);
@@ -52,7 +56,7 @@ router.get("/access-roles", async (req, res, next) => {
 
 router.get("/users", async (req, res, next) => {
   try {
-    const users = await userService.listUsers();
+    const users = await userService.listUsers(req.user);
     res.render("users", { title: "Usuários", users });
   } catch (error) {
     next(error);

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login · Controle de Comércio Exterior</title>
+  <link rel="stylesheet" href="/css/main.css" />
+</head>
+<body class="login-body">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">Controle de comércio exterior</span>
+    </div>
+    <% if (error) { %>
+      <p class="login-error"><%= error %></p>
+    <% } %>
+    <form method="POST" action="/login" class="login-form">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" name="email" required autofocus />
+      <label for="password">Senha</label>
+      <input type="password" id="password" name="password" required />
+      <button type="submit">Entrar</button>
+    </form>
+  </div>
+</body>
+</html>

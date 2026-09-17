@@ -13,5 +13,9 @@
         <a href="/users" class="<%= activePage === 'users' ? 'active' : '' %>">Usuários</a>
         <a href="/system-permissions" class="<%= activePage === 'system-permissions' ? 'active' : '' %>">Permissões do Sistema</a>
       </nav>
+      <a href="/profile" class="sidebar-footer">
+        <span class="avatar"><%= user.name.charAt(0).toUpperCase() %></span>
+        <span class="profile-name"><%= user.name %></span>
+      </a>
     </aside>
     <main class="content">
