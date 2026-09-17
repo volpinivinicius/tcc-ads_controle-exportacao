@@ -1,13 +1,16 @@
 <%- include('partials/head', { title: 'Empresas' }) %>
 <%- include('partials/sidebar', { activePage: 'companies' }) %>
-      <h1>Empresas</h1>
+      <div class="page-header">
+        <h1>Empresas</h1>
+        <a href="/companies/new" class="button-link">+ Nova Empresa</a>
+      </div>
       <table class="data-table">
         <thead>
-          <tr><th>Nome</th><th>Tax ID</th><th>País</th><th>Papéis</th><th>Grupo</th></tr>
+          <tr><th>Nome</th><th>Tax ID</th><th>País</th><th>Papéis</th><th>Grupo</th><th>Ações</th></tr>
         </thead>
         <tbody>
           <% if (companies.length === 0) { %>
-            <tr><td colspan="5">Nenhuma empresa cadastrada ainda.</td></tr>
+            <tr><td colspan="6">Nenhuma empresa cadastrada ainda.</td></tr>
           <% } %>
           <% companies.forEach(function(c) { %>
             <tr>
@@ -16,6 +19,12 @@
               <td><%= c.country %></td>
               <td><%= c.businessRoles.join(', ') %></td>
               <td><%= c.isGroupCompany ? 'Sim' : 'Não' %></td>
+              <td class="row-actions">
+                <a href="/companies/<%= c._id %>/edit">Editar</a>
+                <form method="POST" action="/companies/<%= c._id %>/delete" onsubmit="return confirm('Excluir esta empresa?');">
+                  <button type="submit" class="link-button">Excluir</button>
+                </form>
+              </td>
             </tr>
           <% }); %>
         </tbody>

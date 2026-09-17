@@ -6,6 +6,29 @@ const accessRoleService = require("../services/accessRoleService");
 const userService = require("../services/userService");
 
 const router = express.Router();
+const LINK_SLOTS = 3; // fixed number of company/accessRole rows on the User form (no client-side JS yet)
+
+/** Normalizes a checkbox field into an array (single checked value posts as a string, not an array). */
+function toArray(value) {
+  if (value === undefined) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+/** qs (express.urlencoded extended:true) already parses links[0][company] into an array of objects. */
+function parseLinks(rawLinks) {
+  if (!rawLinks) return [];
+  const list = Array.isArray(rawLinks) ? rawLinks : Object.values(rawLinks);
+  return list
+    .filter((l) => l && l.company && l.accessRole)
+    .map((l) => ({ company: l.company, accessRole: l.accessRole }));
+}
+
+function groupByResource(permissions) {
+  return permissions.reduce((acc, p) => {
+    (acc[p.resource] = acc[p.resource] || []).push(p);
+    return acc;
+  }, {});
+}
 
 router.get("/", (req, res) => {
   res.render("dashboard", { title: "Dashboard" });
@@ -14,6 +37,8 @@ router.get("/", (req, res) => {
 router.get("/profile", (req, res) => {
   res.render("profile", { title: "Meu Perfil" });
 });
+
+// ---------- Companies ----------
 
 router.get("/companies", async (req, res, next) => {
   try {
@@ -24,6 +49,68 @@ router.get("/companies", async (req, res, next) => {
   }
 });
 
+router.get("/companies/new", (req, res) => {
+  res.render("forms/companyForm", { title: "Nova Empresa", company: null, error: null });
+});
+
+router.post("/companies", async (req, res) => {
+  try {
+    await companyService.createCompany({
+      name: req.body.name,
+      taxId: req.body.taxId,
+      country: req.body.country,
+      businessRoles: toArray(req.body.businessRoles),
+      isGroupCompany: req.body.isGroupCompany === "true",
+    });
+    res.redirect("/companies");
+  } catch (error) {
+    res.status(error.status || 500).render("forms/companyForm", {
+      title: "Nova Empresa",
+      company: req.body,
+      error: error.message,
+    });
+  }
+});
+
+router.get("/companies/:id/edit", async (req, res, next) => {
+  try {
+    const company = await companyService.getCompanyById(req.params.id);
+    res.render("forms/companyForm", { title: "Editar Empresa", company, error: null });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/companies/:id", async (req, res) => {
+  try {
+    await companyService.updateCompany(req.params.id, {
+      name: req.body.name,
+      taxId: req.body.taxId,
+      country: req.body.country,
+      businessRoles: toArray(req.body.businessRoles),
+      isGroupCompany: req.body.isGroupCompany === "true",
+    });
+    res.redirect("/companies");
+  } catch (error) {
+    res.status(error.status || 500).render("forms/companyForm", {
+      title: "Editar Empresa",
+      company: { ...req.body, _id: req.params.id },
+      error: error.message,
+    });
+  }
+});
+
+router.post("/companies/:id/delete", async (req, res, next) => {
+  try {
+    await companyService.deleteCompany(req.params.id);
+    res.redirect("/companies");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ---------- System Permissions (read-only) ----------
+
 router.get("/system-permissions", async (req, res, next) => {
   try {
     const permissions = await systemPermissionService.listPermissions();
@@ -33,17 +120,112 @@ router.get("/system-permissions", async (req, res, next) => {
   }
 });
 
+// ---------- Company Permission Policies ----------
+
 router.get("/company-permission-policies", async (req, res, next) => {
   try {
     const policies = await companyPermissionPolicyService.listPolicies(req.user);
-    res.render("companyPermissionPolicies", {
-      title: "Políticas de Permissão",
-      policies,
+    res.render("companyPermissionPolicies", { title: "Políticas de Permissão", policies });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/company-permission-policies/new", async (req, res, next) => {
+  try {
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.render("forms/companyPermissionPolicyForm", {
+      title: "Nova Política de Permissão",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      policy: null,
+      error: null,
     });
   } catch (error) {
     next(error);
   }
 });
+
+router.post("/company-permission-policies", async (req, res) => {
+  try {
+    await companyPermissionPolicyService.createPolicy(
+      { company: req.body.company, allowedPermissions: toArray(req.body.allowedPermissions) },
+      req.user
+    );
+    res.redirect("/company-permission-policies");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.status(error.status || 500).render("forms/companyPermissionPolicyForm", {
+      title: "Nova Política de Permissão",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      policy: { company: req.body.company, allowedPermissions: toArray(req.body.allowedPermissions) },
+      error: error.message,
+    });
+  }
+});
+
+router.get("/company-permission-policies/:companyId/edit", async (req, res, next) => {
+  try {
+    const existing = await companyPermissionPolicyService.getPolicyByCompanyId(
+      req.params.companyId,
+      req.user
+    );
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.render("forms/companyPermissionPolicyForm", {
+      title: "Editar Política de Permissão",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      policy: {
+        _isEdit: true,
+        company: req.params.companyId,
+        allowedPermissions: existing.allowedPermissions.map((p) => String(p._id || p)),
+      },
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/company-permission-policies/:companyId", async (req, res) => {
+  try {
+    await companyPermissionPolicyService.updatePolicyByCompanyId(
+      req.params.companyId,
+      { allowedPermissions: toArray(req.body.allowedPermissions) },
+      req.user
+    );
+    res.redirect("/company-permission-policies");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.status(error.status || 500).render("forms/companyPermissionPolicyForm", {
+      title: "Editar Política de Permissão",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      policy: {
+        _isEdit: true,
+        company: req.params.companyId,
+        allowedPermissions: toArray(req.body.allowedPermissions),
+      },
+      error: error.message,
+    });
+  }
+});
+
+router.post("/company-permission-policies/:companyId/delete", async (req, res, next) => {
+  try {
+    await companyPermissionPolicyService.deletePolicyByCompanyId(req.params.companyId, req.user);
+    res.redirect("/company-permission-policies");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ---------- Access Roles ----------
 
 router.get("/access-roles", async (req, res, next) => {
   try {
@@ -54,6 +236,118 @@ router.get("/access-roles", async (req, res, next) => {
   }
 });
 
+router.get("/access-roles/new", async (req, res, next) => {
+  try {
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.render("forms/accessRoleForm", {
+      title: "Novo Perfil de Acesso",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      role: null,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/access-roles", async (req, res) => {
+  try {
+    await accessRoleService.createAccessRole(
+      {
+        name: req.body.name,
+        scope: req.body.scope,
+        company: req.body.scope === "SYSTEM" ? undefined : req.body.company,
+        permissions: toArray(req.body.permissions),
+      },
+      req.user
+    );
+    res.redirect("/access-roles");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.status(error.status || 500).render("forms/accessRoleForm", {
+      title: "Novo Perfil de Acesso",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      role: {
+        name: req.body.name,
+        scope: req.body.scope,
+        company: req.body.company,
+        permissions: toArray(req.body.permissions),
+      },
+      error: error.message,
+    });
+  }
+});
+
+router.get("/access-roles/:id/edit", async (req, res, next) => {
+  try {
+    const role = await accessRoleService.getAccessRoleById(req.params.id, req.user);
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.render("forms/accessRoleForm", {
+      title: "Editar Perfil de Acesso",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      role: {
+        _id: role._id,
+        name: role.name,
+        scope: role.scope,
+        company: role.company ? String(role.company._id || role.company) : "",
+        permissions: role.permissions.map((p) => String(p._id || p)),
+      },
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/access-roles/:id", async (req, res) => {
+  try {
+    await accessRoleService.updateAccessRole(
+      req.params.id,
+      {
+        name: req.body.name,
+        scope: req.body.scope,
+        company: req.body.scope === "SYSTEM" ? undefined : req.body.company,
+        permissions: toArray(req.body.permissions),
+      },
+      req.user
+    );
+    res.redirect("/access-roles");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    const permissions = await systemPermissionService.listPermissions();
+    res.status(error.status || 500).render("forms/accessRoleForm", {
+      title: "Editar Perfil de Acesso",
+      companies,
+      permissionsByResource: groupByResource(permissions),
+      role: {
+        _id: req.params.id,
+        name: req.body.name,
+        scope: req.body.scope,
+        company: req.body.company,
+        permissions: toArray(req.body.permissions),
+      },
+      error: error.message,
+    });
+  }
+});
+
+router.post("/access-roles/:id/delete", async (req, res, next) => {
+  try {
+    await accessRoleService.deleteAccessRole(req.params.id, req.user);
+    res.redirect("/access-roles");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ---------- Users ----------
+
 router.get("/users", async (req, res, next) => {
   try {
     const users = await userService.listUsers(req.user);
@@ -62,6 +356,115 @@ router.get("/users", async (req, res, next) => {
     next(error);
   }
 });
+
+router.get("/users/new", async (req, res, next) => {
+  try {
+    const companies = await companyService.listCompanies(req.user);
+    const roles = await accessRoleService.listAccessRoles(req.user);
+    res.render("forms/userForm", {
+      title: "Novo Usuário",
+      companies,
+      roles,
+      targetUser: null,
+      linkSlots: LINK_SLOTS,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/users", async (req, res) => {
+  try {
+    await userService.createUser(
+      {
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+        links: parseLinks(req.body.links),
+      },
+      req.user
+    );
+    res.redirect("/users");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    const roles = await accessRoleService.listAccessRoles(req.user);
+    res.status(error.status || 500).render("forms/userForm", {
+      title: "Novo Usuário",
+      companies,
+      roles,
+      targetUser: { name: req.body.name, email: req.body.email, links: parseLinks(req.body.links) },
+      linkSlots: LINK_SLOTS,
+      error: error.message,
+    });
+  }
+});
+
+router.get("/users/:id/edit", async (req, res, next) => {
+  try {
+    const user = await userService.getUserById(req.params.id, req.user);
+    const companies = await companyService.listCompanies(req.user);
+    const roles = await accessRoleService.listAccessRoles(req.user);
+    res.render("forms/userForm", {
+      title: "Editar Usuário",
+      companies,
+      roles,
+      targetUser: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        links: user.links.map((l) => ({
+          company: String(l.company?._id || l.company),
+          accessRole: String(l.accessRole?._id || l.accessRole),
+        })),
+      },
+      linkSlots: LINK_SLOTS,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/users/:id", async (req, res) => {
+  try {
+    const payload = {
+      name: req.body.name,
+      email: req.body.email,
+      links: parseLinks(req.body.links),
+    };
+    if (req.body.password) payload.password = req.body.password; // blank = keep current password
+    await userService.updateUser(req.params.id, payload, req.user);
+    res.redirect("/users");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    const roles = await accessRoleService.listAccessRoles(req.user);
+    res.status(error.status || 500).render("forms/userForm", {
+      title: "Editar Usuário",
+      companies,
+      roles,
+      targetUser: {
+        _id: req.params.id,
+        name: req.body.name,
+        email: req.body.email,
+        links: parseLinks(req.body.links),
+      },
+      linkSlots: LINK_SLOTS,
+      error: error.message,
+    });
+  }
+});
+
+router.post("/users/:id/delete", async (req, res, next) => {
+  try {
+    await userService.deleteUser(req.params.id, req.user);
+    res.redirect("/users");
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ---------- Placeholders ----------
 
 router.get("/shipments", (req, res) => {
   res.render("placeholder", { title: "Embarques", activePage: "shipments" });

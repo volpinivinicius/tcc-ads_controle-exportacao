@@ -1,0 +1,40 @@
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'access-roles' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= role && role._id ? '/access-roles/' + role._id : '/access-roles' %>" class="data-form">
+        <label>Nome</label>
+        <input type="text" name="name" value="<%= role ? role.name : '' %>" required />
+
+        <label>Escopo</label>
+        <select name="scope" required>
+          <% ['SYSTEM', 'COMPANY', 'ASSIGNED_SHIPMENT'].forEach(function(s) { %>
+            <option value="<%= s %>" <%= (role && role.scope === s) ? 'selected' : '' %>><%= s %></option>
+          <% }); %>
+        </select>
+
+        <label>Empresa (obrigatório, exceto para SYSTEM)</label>
+        <select name="company">
+          <option value="">— nenhuma (SYSTEM) —</option>
+          <% companies.forEach(function(c) { %>
+            <option value="<%= c._id %>" <%= (role && String(role.company) === String(c._id)) ? 'selected' : '' %>><%= c.name %></option>
+          <% }); %>
+        </select>
+
+        <label>Permissões</label>
+        <% Object.keys(permissionsByResource).forEach(function(resource) { %>
+          <fieldset>
+            <legend><%= resource %></legend>
+            <% permissionsByResource[resource].forEach(function(p) { %>
+              <label class="checkbox-item">
+                <input type="checkbox" name="permissions" value="<%= p._id %>"
+                  <%= (role && role.permissions && role.permissions.map(String).includes(String(p._id))) ? 'checked' : '' %> />
+                <%= p.code %>
+              </label>
+            <% }); %>
+          </fieldset>
+        <% }); %>
+
+        <button type="submit"><%= role && role._id ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>

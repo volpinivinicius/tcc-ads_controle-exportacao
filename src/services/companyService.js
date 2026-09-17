@@ -7,6 +7,7 @@
  */
 
 const Company = require("../models/company");
+const CompanyPermissionPolicy = require("../models/companyPermissionPolicy");
 const { hasSystemPermission, companyIdsWithPermission } = require("./authorizationService");
 
 function notFound() {
@@ -42,9 +43,19 @@ async function updateCompany(id, data) {
   return company;
 }
 
+/**
+ * Cascades to the Company's own CompanyPermissionPolicy (a 1:1,
+ * company-owned record — safe to always remove). Does NOT cascade
+ * to AccessRoles or Users still referencing this company, since
+ * silently deleting those would be a much bigger, more surprising
+ * side effect; those are left as-is (and will show as orphaned
+ * references) until a deliberate decision is made on how to
+ * handle them (e.g. block deletion instead of cascading).
+ */
 async function deleteCompany(id) {
   const company = await Company.findByIdAndDelete(id);
   if (!company) throw notFound();
+  await CompanyPermissionPolicy.findOneAndDelete({ company: id });
   return company;
 }
 

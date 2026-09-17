@@ -1,13 +1,16 @@
 <%- include('partials/head', { title: 'Usuários' }) %>
 <%- include('partials/sidebar', { activePage: 'users' }) %>
-      <h1>Usuários</h1>
+      <div class="page-header">
+        <h1>Usuários</h1>
+        <a href="/users/new" class="button-link">+ Novo Usuário</a>
+      </div>
       <table class="data-table">
         <thead>
-          <tr><th>Nome</th><th>E-mail</th><th>Vínculos (empresa · perfil)</th></tr>
+          <tr><th>Nome</th><th>E-mail</th><th>Vínculos (empresa · perfil)</th><th>Ações</th></tr>
         </thead>
         <tbody>
           <% if (users.length === 0) { %>
-            <tr><td colspan="3">Nenhum usuário cadastrado ainda.</td></tr>
+            <tr><td colspan="4">Nenhum usuário cadastrado ainda.</td></tr>
           <% } %>
           <% users.forEach(function(u) { %>
             <tr>
@@ -17,6 +20,12 @@
                 <% u.links.forEach(function(link) { %>
                   <div><%= link.company ? link.company.name : '—' %> · <%= link.accessRole ? (link.accessRole.name + ' (' + link.accessRole.scope + ')') : '—' %></div>
                 <% }); %>
+              </td>
+              <td class="row-actions">
+                <a href="/users/<%= u._id %>/edit">Editar</a>
+                <form method="POST" action="/users/<%= u._id %>/delete" onsubmit="return confirm('Excluir este usuário?');">
+                  <button type="submit" class="link-button">Excluir</button>
+                </form>
               </td>
             </tr>
           <% }); %>

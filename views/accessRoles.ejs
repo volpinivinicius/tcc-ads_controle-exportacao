@@ -1,13 +1,16 @@
 <%- include('partials/head', { title: 'Perfis de Acesso' }) %>
 <%- include('partials/sidebar', { activePage: 'access-roles' }) %>
-      <h1>Perfis de Acesso</h1>
+      <div class="page-header">
+        <h1>Perfis de Acesso</h1>
+        <a href="/access-roles/new" class="button-link">+ Novo Perfil</a>
+      </div>
       <table class="data-table">
         <thead>
-          <tr><th>Nome</th><th>Escopo</th><th>Empresa</th><th>Permissões</th></tr>
+          <tr><th>Nome</th><th>Escopo</th><th>Empresa</th><th>Permissões</th><th>Ações</th></tr>
         </thead>
         <tbody>
           <% if (roles.length === 0) { %>
-            <tr><td colspan="4">Nenhum perfil cadastrado ainda.</td></tr>
+            <tr><td colspan="5">Nenhum perfil cadastrado ainda.</td></tr>
           <% } %>
           <% roles.forEach(function(r) { %>
             <tr>
@@ -15,6 +18,12 @@
               <td><%= r.scope %></td>
               <td><%= r.company ? r.company.name : '—' %></td>
               <td><%= r.permissions.map(function(p) { return p.code; }).join(', ') %></td>
+              <td class="row-actions">
+                <a href="/access-roles/<%= r._id %>/edit">Editar</a>
+                <form method="POST" action="/access-roles/<%= r._id %>/delete" onsubmit="return confirm('Excluir este perfil?');">
+                  <button type="submit" class="link-button">Excluir</button>
+                </form>
+              </td>
             </tr>
           <% }); %>
         </tbody>

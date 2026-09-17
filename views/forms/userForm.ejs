@@ -1,0 +1,36 @@
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'users' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= targetUser && targetUser._id ? '/users/' + targetUser._id : '/users' %>" class="data-form">
+        <label>Nome</label>
+        <input type="text" name="name" value="<%= targetUser ? targetUser.name : '' %>" required />
+
+        <label>E-mail</label>
+        <input type="email" name="email" value="<%= targetUser ? targetUser.email : '' %>" required />
+
+        <label>Senha<%= (targetUser && targetUser._id) ? ' (deixe em branco para manter a atual)' : '' %></label>
+        <input type="password" name="password" <%= (!targetUser || !targetUser._id) ? 'required' : '' %> />
+
+        <label>Vínculos (empresa + perfil de acesso)</label>
+        <% for (var i = 0; i < linkSlots; i++) { %>
+          <% var link = (targetUser && targetUser.links && targetUser.links[i]) || {}; %>
+          <div class="link-slot">
+            <select name="links[<%= i %>][company]">
+              <option value="">—</option>
+              <% companies.forEach(function(c) { %>
+                <option value="<%= c._id %>" <%= String(link.company) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+              <% }); %>
+            </select>
+            <select name="links[<%= i %>][accessRole]">
+              <option value="">—</option>
+              <% roles.forEach(function(r) { %>
+                <option value="<%= r._id %>" <%= String(link.accessRole) === String(r._id) ? 'selected' : '' %>><%= r.name %> (<%= r.scope %>)</option>
+              <% }); %>
+            </select>
+          </div>
+        <% } %>
+
+        <button type="submit"><%= targetUser && targetUser._id ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>
