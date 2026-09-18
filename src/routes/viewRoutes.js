@@ -4,9 +4,21 @@ const systemPermissionService = require("../services/systemPermissionService");
 const companyPermissionPolicyService = require("../services/companyPermissionPolicyService");
 const accessRoleService = require("../services/accessRoleService");
 const userService = require("../services/userService");
+const shipmentService = require("../services/shipmentService");
 
 const router = express.Router();
 const LINK_SLOTS = 3; // fixed number of company/accessRole rows on the User form (no client-side JS yet)
+
+const SHIPMENT_STATUS_LABELS = {
+  0: "Novo embarque",
+  1: "Aguardando liberação para faturamento",
+  2: "Parcialmente faturado",
+  3: "Aguardando coleta/embarque",
+  4: "Embarcado",
+  5: "Aguardando emissão de documentação",
+  6: "Aguardando transferência de posse",
+  7: "Encerrado",
+};
 
 /** Normalizes a checkbox field into an array (single checked value posts as a string, not an array). */
 function toArray(value) {
@@ -536,8 +548,155 @@ router.post("/users/:id/hard-delete", async (req, res, next) => {
 
 // ---------- Placeholders ----------
 
-router.get("/shipments", (req, res) => {
-  res.render("placeholder", { title: "Embarques", activePage: "shipments" });
+router.get("/shipments", async (req, res, next) => {
+  try {
+    const filters = {
+      modal: req.query.modal,
+      processType: req.query.processType,
+      status: req.query.status,
+      isActive: req.query.isActive,
+    };
+    const shipments = await shipmentService.listShipments(req.user, filters);
+    res.render("shipments", {
+      title: "Embarques",
+      shipments,
+      filters,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/shipments/new", async (req, res, next) => {
+  try {
+    const companies = await companyService.listCompanies(req.user);
+    res.render("forms/shipmentForm", {
+      title: "Novo Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: null,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments", async (req, res) => {
+  try {
+    await shipmentService.createShipment(
+      {
+        reference: req.body.reference || undefined,
+        exporterCompany: req.body.exporterCompany,
+        importerCompany: req.body.importerCompany,
+        modal: req.body.modal,
+        incoterm: req.body.incoterm || undefined,
+      },
+      req.user
+    );
+    res.redirect("/shipments");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    res.status(error.status || 500).render("forms/shipmentForm", {
+      title: "Novo Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: req.body,
+      error: error.message,
+    });
+  }
+});
+
+router.get("/shipments/:id", async (req, res, next) => {
+  try {
+    const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
+    res.render("shipmentDetail", {
+      title: "Embarque " + (shipment.reference || shipment._id),
+      shipment,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/shipments/:id/edit", async (req, res, next) => {
+  try {
+    const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
+    const companies = await companyService.listCompanies(req.user);
+    res.render("forms/shipmentForm", {
+      title: "Editar Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: {
+        _id: shipment._id,
+        reference: shipment.reference,
+        exporterCompany: String(shipment.exporterCompany?._id || shipment.exporterCompany),
+        importerCompany: String(shipment.importerCompany?._id || shipment.importerCompany),
+        modal: shipment.modal,
+        incoterm: shipment.incoterm,
+        status: shipment.status,
+      },
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id", async (req, res) => {
+  try {
+    await shipmentService.updateShipment(
+      req.params.id,
+      {
+        reference: req.body.reference || undefined,
+        exporterCompany: req.body.exporterCompany,
+        importerCompany: req.body.importerCompany,
+        modal: req.body.modal,
+        incoterm: req.body.incoterm || undefined,
+        status: req.body.status !== undefined ? Number(req.body.status) : undefined,
+      },
+      req.user
+    );
+    res.redirect("/shipments");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    res.status(error.status || 500).render("forms/shipmentForm", {
+      title: "Editar Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: { ...req.body, _id: req.params.id },
+      error: error.message,
+    });
+  }
+});
+
+router.post("/shipments/:id/delete", async (req, res, next) => {
+  try {
+    await shipmentService.deactivateShipment(req.params.id, req.user);
+    res.redirect("/shipments");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/reactivate", async (req, res, next) => {
+  try {
+    await shipmentService.reactivateShipment(req.params.id, req.user);
+    res.redirect("/shipments");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/hard-delete", async (req, res, next) => {
+  try {
+    await shipmentService.hardDeleteShipment(req.params.id, req.user);
+    res.redirect("/shipments");
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get("/bookings", (req, res) => {

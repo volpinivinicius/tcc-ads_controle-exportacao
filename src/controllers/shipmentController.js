@@ -40,3 +40,83 @@
  * exposing their completion state. See the Shipment Checklist
  * Item Controller for details.
  */
+
+/**
+ * BASIC CRUD for Shipment. See shipmentService for the business
+ * rules and authorization (exporter OR importer counts as
+ * "owning" company). "delete" deactivates; "hardDelete" performs
+ * true removal, System Administrator only.
+ */
+
+const shipmentService = require("../services/shipmentService");
+
+async function create(req, res, next) {
+  try {
+    const shipment = await shipmentService.createShipment(req.body, req.user);
+    res.status(201).json(shipment);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function list(req, res, next) {
+  try {
+    const filters = {
+      modal: req.query.modal,
+      processType: req.query.processType,
+      status: req.query.status,
+      isActive: req.query.isActive,
+    };
+    const shipments = await shipmentService.listShipments(req.user, filters);
+    res.json(shipments);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getById(req, res, next) {
+  try {
+    const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
+    res.json(shipment);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function update(req, res, next) {
+  try {
+    const shipment = await shipmentService.updateShipment(req.params.id, req.body, req.user);
+    res.json(shipment);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deactivate(req, res, next) {
+  try {
+    const shipment = await shipmentService.deactivateShipment(req.params.id, req.user);
+    res.json(shipment);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function reactivate(req, res, next) {
+  try {
+    const shipment = await shipmentService.reactivateShipment(req.params.id, req.user);
+    res.json(shipment);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function hardDelete(req, res, next) {
+  try {
+    await shipmentService.hardDeleteShipment(req.params.id, req.user);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { create, list, getById, update, deactivate, reactivate, hardDelete };

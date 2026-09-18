@@ -449,3 +449,40 @@ body {
 .link-button-positive {
   color: #1e7e34;
 }
+
+.detail-card {
+  max-width: 640px;
+  background: #fff;
+  border: 1px solid #e2e5e9;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f1f3;
+  font-size: 14px;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #6b7280;
+}
+
+.detail-value {
+  font-weight: 500;
+  text-align: right;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 1.25rem;
+}

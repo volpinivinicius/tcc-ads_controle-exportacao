@@ -1,0 +1,72 @@
+<%- include('partials/head', { title: title }) %>
+<%- include('partials/sidebar', { activePage: 'shipments' }) %>
+      <div class="page-header">
+        <h1>Embarque <%= shipment.reference || shipment._id %></h1>
+        <a href="/shipments" class="filter-clear">&larr; Voltar para Embarques</a>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-row">
+          <span class="detail-label">Referência</span>
+          <span class="detail-value"><%= shipment.reference || '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Empresa Exportadora</span>
+          <span class="detail-value"><%= shipment.exporterCompany ? shipment.exporterCompany.name : '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Empresa Importadora</span>
+          <span class="detail-value"><%= shipment.importerCompany ? shipment.importerCompany.name : '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Modal</span>
+          <span class="detail-value"><%= shipment.modal %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Classificação</span>
+          <span class="detail-value"><%= shipment.processType %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="detail-value"><%= shipment.status %> - <%= statusLabels[shipment.status] %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Incoterm</span>
+          <span class="detail-value"><%= shipment.incoterm || '—' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Situação</span>
+          <span class="detail-value"><span class="status-badge <%= shipment.isActive ? 'status-active' : 'status-inactive' %>"><%= shipment.isActive ? 'Ativo' : 'Cancelado' %></span></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Criado em</span>
+          <span class="detail-value"><%= new Date(shipment.createdAt).toLocaleString('pt-BR') %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Última atualização</span>
+          <span class="detail-value"><%= new Date(shipment.updatedAt).toLocaleString('pt-BR') %></span>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <a href="/shipments/<%= shipment._id %>/edit" class="button-link">Editar</a>
+        <% if (shipment.isActive) { %>
+          <form method="POST" action="/shipments/<%= shipment._id %>/delete" onsubmit="return confirm('Cancelar este embarque?');">
+            <button type="submit" class="link-button">Cancelar</button>
+          </form>
+        <% } else { %>
+          <form method="POST" action="/shipments/<%= shipment._id %>/reactivate">
+            <button type="submit" class="link-button link-button-positive">Reabrir</button>
+          </form>
+        <% } %>
+        <form method="POST" action="/shipments/<%= shipment._id %>/hard-delete" onsubmit="return confirm('Excluir este embarque DEFINITIVAMENTE? Essa ação não pode ser desfeita e requer permissão de System Administrator.');">
+          <button type="submit" class="link-button">Excluir definitivamente</button>
+        </form>
+      </div>
+
+      <!--
+        Próximas partes (Booking, Container, checklist de documentos,
+        feed de notas) vão ganhar suas próprias seções aqui, cada
+        uma na sua vez.
+      -->
+<%- include('partials/footer') %>
