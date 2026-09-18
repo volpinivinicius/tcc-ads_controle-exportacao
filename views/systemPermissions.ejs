@@ -1,0 +1,21 @@
+<%- include('partials/head', { title: 'Permissões do Sistema' }) %>
+<%- include('partials/sidebar', { activePage: 'system-permissions' }) %>
+      <h1>Permissões do Sistema</h1>
+      <table class="data-table">
+        <thead>
+          <tr><th>Recurso</th><th>Código</th><th>Descrição</th></tr>
+        </thead>
+        <tbody>
+          <% if (permissions.length === 0) { %>
+            <tr><td colspan="3">Nenhuma permissão cadastrada ainda.</td></tr>
+          <% } %>
+          <% permissions.forEach(function(p) { %>
+            <tr>
+              <td><%= p.resource %></td>
+              <td><%= p.code %></td>
+              <td><%= p.description %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+<%- include('partials/footer') %>

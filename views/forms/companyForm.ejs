@@ -1,0 +1,33 @@
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'companies' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= company && company._id ? '/companies/' + company._id : '/companies' %>" class="data-form">
+        <label>Nome</label>
+        <input type="text" name="name" value="<%= company ? company.name : '' %>" required />
+
+        <label>Tax ID</label>
+        <input type="text" name="taxId" value="<%= company ? company.taxId : '' %>" required />
+
+        <label>País</label>
+        <input type="text" name="country" value="<%= company ? company.country : '' %>" required />
+
+        <label>Papéis de negócio</label>
+        <div class="checkbox-group">
+          <% ['EXPORTER', 'IMPORTER', 'CARRIER', 'WAREHOUSE'].forEach(function(role) { %>
+            <label class="checkbox-item">
+              <input type="checkbox" name="businessRoles" value="<%= role %>"
+                <%= (company && company.businessRoles && company.businessRoles.includes(role)) ? 'checked' : '' %> />
+              <%= role %>
+            </label>
+          <% }); %>
+        </div>
+
+        <label class="checkbox-item">
+          <input type="checkbox" name="isGroupCompany" value="true" <%= (company && company.isGroupCompany) ? 'checked' : '' %> />
+          Empresa do grupo
+        </label>
+
+        <button type="submit"><%= company && company._id ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>

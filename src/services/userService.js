@@ -4,14 +4,27 @@
  * accessRole belongs to that same link's company, and that no
  * company is linked more than once per user.
  *
- * NOTE: does not yet enforce *who* may call this, nor the
- * SYSTEM-scoped downgrade protection — that requires real
- * authentication, still pending.
+ * Authorization: creating a User is SYSTEM-only (USER_CREATE),
+ * per an explicit product decision — every User is registered by
+ * the System Administrator, who must specify which company(ies)
+ * it is linked to. Viewing is filtered: SYSTEM sees every User,
+ * others only see Users who share a link to one of their own
+ * companies (with USER_VIEW).
+ *
+ * SIMPLIFICATION (documented, not an oversight): update and
+ * delete are also SYSTEM-only for now, rather than allowing a
+ * Company Administrator to manage members of their own company.
+ * Revisit if that finer-grained delegation is needed later.
  */
 
 const User = require("../models/user");
 const Company = require("../models/company");
 const AccessRole = require("../models/accessRole");
+const {
+  hasSystemPermission,
+  assertCan,
+  companyIdsWithPermission,
+} = require("./authorizationService");
 
 function notFound() {
   const error = new Error("User not found");
@@ -50,24 +63,45 @@ async function validateLinks(links) {
   }
 }
 
-async function createUser(data) {
+async function createUser(data, actingUser) {
+  assertCan(actingUser, "USER_CREATE", null);
   await validateLinks(data.links);
   return User.create(data);
 }
 
-async function listUsers() {
-  return User.find().populate("links.company").populate("links.accessRole");
+async function listUsers(actingUser) {
+  if (hasSystemPermission(actingUser, "USER_VIEW")) {
+    return User.find().populate("links.company").populate("links.accessRole");
+  }
+  const allowedIds = companyIdsWithPermission(actingUser, "USER_VIEW");
+  return User.find({ "links.company": { $in: allowedIds } })
+    .populate("links.company")
+    .populate("links.accessRole");
 }
 
-async function getUserById(id) {
+async function getUserById(id, actingUser) {
   const user = await User.findById(id)
     .populate("links.company")
     .populate("links.accessRole");
   if (!user) throw notFound();
+
+  if (!hasSystemPermission(actingUser, "USER_VIEW")) {
+    const allowedIds = new Set(companyIdsWithPermission(actingUser, "USER_VIEW"));
+    const shared = user.links.some((link) =>
+      allowedIds.has(String(link.company?._id || link.company))
+    );
+    if (!shared) {
+      const error = new Error("Forbidden");
+      error.status = 403;
+      throw error;
+    }
+  }
   return user;
 }
 
-async function updateUser(id, data) {
+async function updateUser(id, data, actingUser) {
+  assertCan(actingUser, "USER_UPDATE", null);
+
   const current = await User.findById(id);
   if (!current) throw notFound();
 
@@ -82,7 +116,9 @@ async function updateUser(id, data) {
   return user;
 }
 
-async function deleteUser(id) {
+async function deleteUser(id, actingUser) {
+  assertCan(actingUser, "USER_DELETE", null);
+
   const user = await User.findByIdAndDelete(id);
   if (!user) throw notFound();
   return user;

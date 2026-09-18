@@ -1,0 +1,35 @@
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'company-permission-policies' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= (policy && policy._isEdit) ? '/company-permission-policies/' + policy.company : '/company-permission-policies' %>" class="data-form">
+        <label>Empresa</label>
+        <% if (policy && policy._isEdit) { %>
+          <% var current = companies.find(function(c) { return String(c._id) === String(policy.company); }); %>
+          <input type="text" value="<%= current ? current.name : policy.company %>" disabled />
+        <% } else { %>
+          <select name="company" required>
+            <option value="">Selecione...</option>
+            <% companies.forEach(function(c) { %>
+              <option value="<%= c._id %>" <%= (policy && String(policy.company) === String(c._id)) ? 'selected' : '' %>><%= c.name %></option>
+            <% }); %>
+          </select>
+        <% } %>
+
+        <label>Permissões liberadas</label>
+        <% Object.keys(permissionsByResource).forEach(function(resource) { %>
+          <fieldset>
+            <legend><%= resource %></legend>
+            <% permissionsByResource[resource].forEach(function(p) { %>
+              <label class="checkbox-item">
+                <input type="checkbox" name="allowedPermissions" value="<%= p._id %>"
+                  <%= (policy && policy.allowedPermissions && policy.allowedPermissions.map(String).includes(String(p._id))) ? 'checked' : '' %> />
+                <%= p.code %>
+              </label>
+            <% }); %>
+          </fieldset>
+        <% }); %>
+
+        <button type="submit"><%= (policy && policy._isEdit) ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>

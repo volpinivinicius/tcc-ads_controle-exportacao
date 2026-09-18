@@ -1,0 +1,33 @@
+<%- include('partials/head', { title: 'Políticas de Permissão' }) %>
+<%- include('partials/sidebar', { activePage: 'company-permission-policies' }) %>
+      <div class="page-header">
+        <h1>Políticas de Permissão</h1>
+        <a href="/company-permission-policies/new" class="button-link">+ Nova Política</a>
+      </div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Empresa</th><th>Permissões liberadas</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% if (policies.length === 0) { %>
+            <tr><td colspan="3">Nenhuma política cadastrada ainda.</td></tr>
+          <% } %>
+          <% policies.forEach(function(p) { %>
+            <tr>
+              <td><%= p.company ? p.company.name : '—' %></td>
+              <td><%= p.allowedPermissions.map(function(perm) { return perm.code; }).join(', ') %></td>
+              <td class="row-actions">
+                <% if (p.company) { %>
+                  <a href="/company-permission-policies/<%= p.company._id %>/edit">Editar</a>
+                  <form method="POST" action="/company-permission-policies/<%= p.company._id %>/delete" onsubmit="return confirm('Excluir esta política?');">
+                    <button type="submit" class="link-button">Excluir</button>
+                  </form>
+                <% } else { %>
+                  <span class="muted">Empresa removida</span>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+<%- include('partials/footer') %>

@@ -1,0 +1,24 @@
+<%- include('partials/head', { title: 'Meu Perfil' }) %>
+<%- include('partials/sidebar', { activePage: 'profile' }) %>
+      <h1>Meu Perfil</h1>
+      <p><strong>Nome:</strong> <%= user.name %></p>
+      <p><strong>E-mail:</strong> <%= user.email %></p>
+      <h2 style="font-size: 15px; margin-top: 1.5rem;">Vínculos</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Empresa</th><th>Perfil de Acesso</th><th>Escopo</th></tr>
+        </thead>
+        <tbody>
+          <% user.links.forEach(function(link) { %>
+            <tr>
+              <td><%= link.company ? link.company.name : '—' %></td>
+              <td><%= link.accessRole ? link.accessRole.name : '—' %></td>
+              <td><%= link.accessRole ? link.accessRole.scope : '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+      <form method="POST" action="/logout" style="margin-top: 1.5rem;">
+        <button type="submit" class="logout-button">Sair</button>
+      </form>
+<%- include('partials/footer') %>

@@ -1,13 +1,15 @@
 /**
  * CRUD for AccessRole. See README > The Service Center and >
- * Permission Delegation for the scope rules being validated.
+ * Permission Delegation for the scope rules. Authorization
+ * itself (who may act on which scope/company) is enforced inside
+ * accessRoleService, since it depends on the record's data.
  */
 
 const accessRoleService = require("../services/accessRoleService");
 
 async function create(req, res, next) {
   try {
-    const role = await accessRoleService.createAccessRole(req.body);
+    const role = await accessRoleService.createAccessRole(req.body, req.user);
     res.status(201).json(role);
   } catch (error) {
     next(error);
@@ -16,7 +18,7 @@ async function create(req, res, next) {
 
 async function list(req, res, next) {
   try {
-    const roles = await accessRoleService.listAccessRoles();
+    const roles = await accessRoleService.listAccessRoles(req.user);
     res.json(roles);
   } catch (error) {
     next(error);
@@ -25,7 +27,7 @@ async function list(req, res, next) {
 
 async function getById(req, res, next) {
   try {
-    const role = await accessRoleService.getAccessRoleById(req.params.id);
+    const role = await accessRoleService.getAccessRoleById(req.params.id, req.user);
     res.json(role);
   } catch (error) {
     next(error);
@@ -34,7 +36,7 @@ async function getById(req, res, next) {
 
 async function update(req, res, next) {
   try {
-    const role = await accessRoleService.updateAccessRole(req.params.id, req.body);
+    const role = await accessRoleService.updateAccessRole(req.params.id, req.body, req.user);
     res.json(role);
   } catch (error) {
     next(error);
@@ -43,7 +45,7 @@ async function update(req, res, next) {
 
 async function remove(req, res, next) {
   try {
-    await accessRoleService.deleteAccessRole(req.params.id);
+    await accessRoleService.deleteAccessRole(req.params.id, req.user);
     res.status(204).send();
   } catch (error) {
     next(error);

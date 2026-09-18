@@ -17,7 +17,7 @@ async function create(req, res, next) {
  
 async function list(req, res, next) {
   try {
-    const companies = await companyService.listCompanies();
+    const companies = await companyService.listCompanies(req.user);
     res.json(companies);
   } catch (error) {
     next(error);
