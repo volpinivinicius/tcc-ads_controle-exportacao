@@ -42,8 +42,13 @@ router.get("/profile", (req, res) => {
 
 router.get("/companies", async (req, res, next) => {
   try {
-    const companies = await companyService.listCompanies(req.user);
-    res.render("companies", { title: "Empresas", companies });
+    const filters = {
+      businessRole: req.query.businessRole,
+      isGroupCompany: req.query.isGroupCompany,
+      isActive: req.query.isActive,
+    };
+    const companies = await companyService.listCompanies(req.user, filters);
+    res.render("companies", { title: "Empresas", companies, filters });
   } catch (error) {
     next(error);
   }
@@ -102,7 +107,25 @@ router.post("/companies/:id", async (req, res) => {
 
 router.post("/companies/:id/delete", async (req, res, next) => {
   try {
-    await companyService.deleteCompany(req.params.id);
+    await companyService.deactivateCompany(req.params.id);
+    res.redirect("/companies");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/companies/:id/reactivate", async (req, res, next) => {
+  try {
+    await companyService.reactivateCompany(req.params.id);
+    res.redirect("/companies");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/companies/:id/hard-delete", async (req, res, next) => {
+  try {
+    await companyService.hardDeleteCompany(req.params.id, req.user);
     res.redirect("/companies");
   } catch (error) {
     next(error);
@@ -229,8 +252,14 @@ router.post("/company-permission-policies/:companyId/delete", async (req, res, n
 
 router.get("/access-roles", async (req, res, next) => {
   try {
-    const roles = await accessRoleService.listAccessRoles(req.user);
-    res.render("accessRoles", { title: "Perfis de Acesso", roles });
+    const filters = {
+      scope: req.query.scope,
+      company: req.query.company,
+      isActive: req.query.isActive,
+    };
+    const roles = await accessRoleService.listAccessRoles(req.user, filters);
+    const companies = await companyService.listCompanies(req.user);
+    res.render("accessRoles", { title: "Perfis de Acesso", roles, companies, filters });
   } catch (error) {
     next(error);
   }
@@ -339,7 +368,25 @@ router.post("/access-roles/:id", async (req, res) => {
 
 router.post("/access-roles/:id/delete", async (req, res, next) => {
   try {
-    await accessRoleService.deleteAccessRole(req.params.id, req.user);
+    await accessRoleService.deactivateAccessRole(req.params.id, req.user);
+    res.redirect("/access-roles");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/access-roles/:id/reactivate", async (req, res, next) => {
+  try {
+    await accessRoleService.reactivateAccessRole(req.params.id, req.user);
+    res.redirect("/access-roles");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/access-roles/:id/hard-delete", async (req, res, next) => {
+  try {
+    await accessRoleService.hardDeleteAccessRole(req.params.id, req.user);
     res.redirect("/access-roles");
   } catch (error) {
     next(error);
@@ -350,8 +397,13 @@ router.post("/access-roles/:id/delete", async (req, res, next) => {
 
 router.get("/users", async (req, res, next) => {
   try {
-    const users = await userService.listUsers(req.user);
-    res.render("users", { title: "Usuários", users });
+    const filters = {
+      company: req.query.company,
+      isActive: req.query.isActive,
+    };
+    const users = await userService.listUsers(req.user, filters);
+    const companies = await companyService.listCompanies(req.user);
+    res.render("users", { title: "Usuários", users, companies, filters });
   } catch (error) {
     next(error);
   }
@@ -457,7 +509,25 @@ router.post("/users/:id", async (req, res) => {
 
 router.post("/users/:id/delete", async (req, res, next) => {
   try {
-    await userService.deleteUser(req.params.id, req.user);
+    await userService.deactivateUser(req.params.id, req.user);
+    res.redirect("/users");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/users/:id/reactivate", async (req, res, next) => {
+  try {
+    await userService.reactivateUser(req.params.id, req.user);
+    res.redirect("/users");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/users/:id/hard-delete", async (req, res, next) => {
+  try {
+    await userService.hardDeleteUser(req.params.id, req.user);
     res.redirect("/users");
   } catch (error) {
     next(error);

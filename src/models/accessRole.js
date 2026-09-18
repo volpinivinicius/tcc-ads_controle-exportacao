@@ -30,6 +30,15 @@ const accessRoleSchema = new mongoose.Schema(
     permissions: [
       { type: mongoose.Schema.Types.ObjectId, ref: "SystemPermission" },
     ],
+    /**
+     * Soft-delete flag. An inactive AccessRole grants no
+     * permissions to any User holding it — see
+     * authorizationService, which checks this before honoring a
+     * link — so deactivating a role immediately limits every
+     * User who has it, with no per-user bookkeeping needed. Only
+     * the System Administrator can hard-delete a role.
+     */
+    isActive: { type: Boolean, required: true, default: true },
   },
   { timestamps: true }
 );

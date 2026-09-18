@@ -38,6 +38,12 @@ const userSchema = new mongoose.Schema(
       required: true,
       validate: (links) => links.length > 0,
     },
+    /**
+     * Soft-delete flag. A Company Administrator can deactivate/
+     * reactivate Users linked to their own company; only the
+     * System Administrator can hard-delete a User.
+     */
+    isActive: { type: Boolean, required: true, default: true },
   },
   { timestamps: true }
 );

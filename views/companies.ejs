@@ -4,13 +4,33 @@
         <h1>Empresas</h1>
         <a href="/companies/new" class="button-link">+ Nova Empresa</a>
       </div>
+      <form method="GET" action="/companies" class="filter-bar">
+        <select name="businessRole">
+          <option value="">Todos os papéis</option>
+          <% ['EXPORTER', 'IMPORTER', 'CARRIER', 'WAREHOUSE'].forEach(function(role) { %>
+            <option value="<%= role %>" <%= filters.businessRole === role ? 'selected' : '' %>><%= role %></option>
+          <% }); %>
+        </select>
+        <select name="isGroupCompany">
+          <option value="">Grupo ou externa</option>
+          <option value="true" <%= filters.isGroupCompany === 'true' ? 'selected' : '' %>>Do grupo</option>
+          <option value="false" <%= filters.isGroupCompany === 'false' ? 'selected' : '' %>>Externa</option>
+        </select>
+        <select name="isActive">
+          <option value="">Ativas e inativas</option>
+          <option value="true" <%= filters.isActive === 'true' ? 'selected' : '' %>>Somente ativas</option>
+          <option value="false" <%= filters.isActive === 'false' ? 'selected' : '' %>>Somente inativas</option>
+        </select>
+        <button type="submit">Filtrar</button>
+        <a href="/companies" class="filter-clear">Limpar</a>
+      </form>
       <table class="data-table">
         <thead>
-          <tr><th>Nome</th><th>Tax ID</th><th>País</th><th>Papéis</th><th>Grupo</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>Tax ID</th><th>País</th><th>Papéis</th><th>Grupo</th><th>Status</th><th>Ações</th></tr>
         </thead>
         <tbody>
           <% if (companies.length === 0) { %>
-            <tr><td colspan="6">Nenhuma empresa cadastrada ainda.</td></tr>
+            <tr><td colspan="7">Nenhuma empresa cadastrada ainda.</td></tr>
           <% } %>
           <% companies.forEach(function(c) { %>
             <tr>
@@ -19,10 +39,20 @@
               <td><%= c.country %></td>
               <td><%= c.businessRoles.join(', ') %></td>
               <td><%= c.isGroupCompany ? 'Sim' : 'Não' %></td>
+              <td><span class="status-badge <%= c.isActive ? 'status-active' : 'status-inactive' %>"><%= c.isActive ? 'Ativo' : 'Inativo' %></span></td>
               <td class="row-actions">
                 <a href="/companies/<%= c._id %>/edit">Editar</a>
-                <form method="POST" action="/companies/<%= c._id %>/delete" onsubmit="return confirm('Excluir esta empresa?');">
-                  <button type="submit" class="link-button">Excluir</button>
+                <% if (c.isActive) { %>
+                  <form method="POST" action="/companies/<%= c._id %>/delete" onsubmit="return confirm('Inativar esta empresa?');">
+                    <button type="submit" class="link-button">Inativar</button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/companies/<%= c._id %>/reactivate">
+                    <button type="submit" class="link-button link-button-positive">Reativar</button>
+                  </form>
+                <% } %>
+                <form method="POST" action="/companies/<%= c._id %>/hard-delete" onsubmit="return confirm('Excluir esta empresa DEFINITIVAMENTE? Essa ação não pode ser desfeita e requer permissão de System Administrator.');">
+                  <button type="submit" class="link-button">Excluir definitivamente</button>
                 </form>
               </td>
             </tr>

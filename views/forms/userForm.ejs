@@ -25,7 +25,9 @@
             <select name="links[<%= i %>][accessRole]">
               <option value="">—</option>
               <% roles.forEach(function(r) { %>
-                <option value="<%= r._id %>" <%= String(link.accessRole) === String(r._id) ? 'selected' : '' %>><%= r.name %> (<%= r.scope %>)</option>
+                <option value="<%= r._id %>" <%= String(link.accessRole) === String(r._id) ? 'selected' : '' %>>
+                  <%= r.name %> (<%= r.scope %><%= r.company ? ' — ' + r.company.name : '' %>)
+                </option>
               <% }); %>
             </select>
           </div>

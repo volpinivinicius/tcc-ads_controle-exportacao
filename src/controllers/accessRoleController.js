@@ -1,8 +1,10 @@
 /**
  * CRUD for AccessRole. See README > The Service Center and >
- * Permission Delegation for the scope rules. Authorization
- * itself (who may act on which scope/company) is enforced inside
- * accessRoleService, since it depends on the record's data.
+ * Permission Delegation for the scope rules. Authorization is
+ * enforced inside accessRoleService, since it depends on the
+ * record's data. "delete" deactivates (soft, see service); a
+ * separate "hardDelete" performs true removal, always requiring
+ * a SYSTEM link regardless of the role's own scope/company.
  */
 
 const accessRoleService = require("../services/accessRoleService");
@@ -43,13 +45,31 @@ async function update(req, res, next) {
   }
 }
 
-async function remove(req, res, next) {
+async function deactivate(req, res, next) {
   try {
-    await accessRoleService.deleteAccessRole(req.params.id, req.user);
+    const role = await accessRoleService.deactivateAccessRole(req.params.id, req.user);
+    res.json(role);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function reactivate(req, res, next) {
+  try {
+    const role = await accessRoleService.reactivateAccessRole(req.params.id, req.user);
+    res.json(role);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function hardDelete(req, res, next) {
+  try {
+    await accessRoleService.hardDeleteAccessRole(req.params.id, req.user);
     res.status(204).send();
   } catch (error) {
     next(error);
   }
 }
 
-module.exports = { create, list, getById, update, remove };
+module.exports = { create, list, getById, update, deactivate, reactivate, hardDelete };

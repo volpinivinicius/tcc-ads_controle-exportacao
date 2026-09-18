@@ -1,8 +1,10 @@
 /**
  * CRUD for User. See README > Users linked to multiple companies
  * for the links (company/accessRole pairs) being validated.
- * Authorization (SYSTEM-only create/update/delete, filtered view)
- * is enforced inside userService.
+ * Authorization is enforced inside userService. "delete"
+ * deactivates (a Company Administrator can do this for their own
+ * company's Users); "hardDelete" performs true removal, System
+ * Administrator only.
  */
 
 const userService = require("../services/userService");
@@ -43,13 +45,31 @@ async function update(req, res, next) {
   }
 }
 
-async function remove(req, res, next) {
+async function deactivate(req, res, next) {
   try {
-    await userService.deleteUser(req.params.id, req.user);
+    const user = await userService.deactivateUser(req.params.id, req.user);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function reactivate(req, res, next) {
+  try {
+    const user = await userService.reactivateUser(req.params.id, req.user);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function hardDelete(req, res, next) {
+  try {
+    await userService.hardDeleteUser(req.params.id, req.user);
     res.status(204).send();
   } catch (error) {
     next(error);
   }
 }
 
-module.exports = { create, list, getById, update, remove };
+module.exports = { create, list, getById, update, deactivate, reactivate, hardDelete };
