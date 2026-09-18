@@ -4,13 +4,28 @@
         <h1>Usuários</h1>
         <a href="/users/new" class="button-link">+ Novo Usuário</a>
       </div>
+      <form method="GET" action="/users" class="filter-bar">
+        <select name="company">
+          <option value="">Todas as empresas</option>
+          <% companies.forEach(function(c) { %>
+            <option value="<%= c._id %>" <%= filters.company === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <% }); %>
+        </select>
+        <select name="isActive">
+          <option value="">Ativos e inativos</option>
+          <option value="true" <%= filters.isActive === 'true' ? 'selected' : '' %>>Somente ativos</option>
+          <option value="false" <%= filters.isActive === 'false' ? 'selected' : '' %>>Somente inativos</option>
+        </select>
+        <button type="submit">Filtrar</button>
+        <a href="/users" class="filter-clear">Limpar</a>
+      </form>
       <table class="data-table">
         <thead>
-          <tr><th>Nome</th><th>E-mail</th><th>Vínculos (empresa · perfil)</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>E-mail</th><th>Vínculos (empresa · perfil)</th><th>Status</th><th>Ações</th></tr>
         </thead>
         <tbody>
           <% if (users.length === 0) { %>
-            <tr><td colspan="4">Nenhum usuário cadastrado ainda.</td></tr>
+            <tr><td colspan="5">Nenhum usuário cadastrado ainda.</td></tr>
           <% } %>
           <% users.forEach(function(u) { %>
             <tr>
@@ -21,10 +36,20 @@
                   <div><%= link.company ? link.company.name : '—' %> · <%= link.accessRole ? (link.accessRole.name + ' (' + link.accessRole.scope + ')') : '—' %></div>
                 <% }); %>
               </td>
+              <td><span class="status-badge <%= u.isActive ? 'status-active' : 'status-inactive' %>"><%= u.isActive ? 'Ativo' : 'Inativo' %></span></td>
               <td class="row-actions">
                 <a href="/users/<%= u._id %>/edit">Editar</a>
-                <form method="POST" action="/users/<%= u._id %>/delete" onsubmit="return confirm('Excluir este usuário?');">
-                  <button type="submit" class="link-button">Excluir</button>
+                <% if (u.isActive) { %>
+                  <form method="POST" action="/users/<%= u._id %>/delete" onsubmit="return confirm('Inativar este usuário?');">
+                    <button type="submit" class="link-button">Inativar</button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/users/<%= u._id %>/reactivate">
+                    <button type="submit" class="link-button link-button-positive">Reativar</button>
+                  </form>
+                <% } %>
+                <form method="POST" action="/users/<%= u._id %>/hard-delete" onsubmit="return confirm('Excluir este usuário DEFINITIVAMENTE? Essa ação não pode ser desfeita e requer permissão de System Administrator.');">
+                  <button type="submit" class="link-button">Excluir definitivamente</button>
                 </form>
               </td>
             </tr>

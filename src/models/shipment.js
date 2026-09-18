@@ -114,3 +114,64 @@
  * not duplicated on the shipment; they are represented only
  * through the Booking and Container the shipment is linked to.
  */
+
+/**
+ * BASIC version (part 1 of the incremental build): exporter,
+ * importer, modal, the derived processType, status, and
+ * incoterm. Deliberately excludes, for now: Booking linkage,
+ * exportStage/importStage, the document checklist, and the
+ * activity feed — each is its own future increment. See README
+ * > Shipment Lifecycle and the business rules already documented
+ * for this project.
+ *
+ * reference is an optional, human-facing shipment number (added
+ * now for basic usability; not explicitly discussed before —
+ * flagging in case a different scheme is preferred later).
+ *
+ * isActive: soft delete, consistent with Company/AccessRole/User
+ * — a shipment record is never truly lost, only deactivated
+ * (e.g. a cancelled/voided process, as opposed to one that
+ * completed normally to status 7 CLOSED).
+ */
+
+const mongoose = require("mongoose");
+
+const shipmentSchema = new mongoose.Schema(
+  {
+    reference: { type: String, trim: true, unique: true, sparse: true },
+    exporterCompany: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
+    importerCompany: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+      required: true,
+    },
+    modal: {
+      type: String,
+      enum: ["MARITIME", "AIR", "ROAD", "OTHER"],
+      required: true,
+    },
+    processType: {
+      type: String,
+      enum: ["EXPORT", "IMPORT", "INTERCOMPANY"],
+      required: true,
+    },
+    status: {
+      type: Number,
+      enum: [0, 1, 2, 3, 4, 5, 6, 7],
+      default: 0,
+      required: true,
+    },
+    incoterm: {
+      type: String,
+      enum: ["EXW", "FCA", "FOB", "CFR", "CIF", "CPT", "CIP", "DAP", "DDP"],
+    },
+    isActive: { type: Boolean, required: true, default: true },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Shipment", shipmentSchema);

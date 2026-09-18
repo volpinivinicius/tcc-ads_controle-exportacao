@@ -15,6 +15,12 @@ router.get("/", companyController.list);
 
 router.get("/:id", requirePermission("COMPANY_VIEW", (req) => req.params.id), companyController.getById);
 router.put("/:id", requirePermission("COMPANY_UPDATE", (req) => req.params.id), companyController.update);
-router.delete("/:id", requirePermission("COMPANY_DELETE", (req) => req.params.id), companyController.remove);
+
+// Soft delete (deactivate/reactivate): same permission as before, scoped to the company itself.
+router.delete("/:id", requirePermission("COMPANY_DELETE", (req) => req.params.id), companyController.deactivate);
+router.post("/:id/reactivate", requirePermission("COMPANY_DELETE", (req) => req.params.id), companyController.reactivate);
+
+// True removal: no companyId resolver, so only a SYSTEM link with COMPANY_DELETE qualifies (also asserted in the service).
+router.delete("/:id/permanent", requirePermission("COMPANY_DELETE"), companyController.hardDelete);
 
 module.exports = router;

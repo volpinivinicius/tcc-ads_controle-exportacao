@@ -22,6 +22,15 @@ const companySchema = new mongoose.Schema(
       validate: (roles) => roles.length > 0,
     },
     isGroupCompany: { type: Boolean, required: true, default: false },
+    /**
+     * Soft-delete flag: "deleting" a Company deactivates it
+     * (isActive: false) rather than removing the record, so its
+     * history is preserved. Only the System Administrator can
+     * perform a true hard delete.
+     * TODO: deactivating a Company does not yet cascade to its
+     * AccessRoles, Users, or CompanyPermissionPolicy — deferred.
+     */
+    isActive: { type: Boolean, required: true, default: true },
   },
   { timestamps: true }
 );

@@ -4,13 +4,34 @@
         <h1>Perfis de Acesso</h1>
         <a href="/access-roles/new" class="button-link">+ Novo Perfil</a>
       </div>
+      <form method="GET" action="/access-roles" class="filter-bar">
+        <select name="scope">
+          <option value="">Todos os escopos</option>
+          <% ['SYSTEM', 'COMPANY', 'ASSIGNED_SHIPMENT'].forEach(function(s) { %>
+            <option value="<%= s %>" <%= filters.scope === s ? 'selected' : '' %>><%= s %></option>
+          <% }); %>
+        </select>
+        <select name="company">
+          <option value="">Todas as empresas</option>
+          <% companies.forEach(function(c) { %>
+            <option value="<%= c._id %>" <%= filters.company === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <% }); %>
+        </select>
+        <select name="isActive">
+          <option value="">Ativos e inativos</option>
+          <option value="true" <%= filters.isActive === 'true' ? 'selected' : '' %>>Somente ativos</option>
+          <option value="false" <%= filters.isActive === 'false' ? 'selected' : '' %>>Somente inativos</option>
+        </select>
+        <button type="submit">Filtrar</button>
+        <a href="/access-roles" class="filter-clear">Limpar</a>
+      </form>
       <table class="data-table">
         <thead>
-          <tr><th>Nome</th><th>Escopo</th><th>Empresa</th><th>Permissões</th><th>Ações</th></tr>
+          <tr><th>Nome</th><th>Escopo</th><th>Empresa</th><th>Permissões</th><th>Status</th><th>Ações</th></tr>
         </thead>
         <tbody>
           <% if (roles.length === 0) { %>
-            <tr><td colspan="5">Nenhum perfil cadastrado ainda.</td></tr>
+            <tr><td colspan="6">Nenhum perfil cadastrado ainda.</td></tr>
           <% } %>
           <% roles.forEach(function(r) { %>
             <tr>
@@ -18,10 +39,20 @@
               <td><%= r.scope %></td>
               <td><%= r.company ? r.company.name : '—' %></td>
               <td><%= r.permissions.map(function(p) { return p.code; }).join(', ') %></td>
+              <td><span class="status-badge <%= r.isActive ? 'status-active' : 'status-inactive' %>"><%= r.isActive ? 'Ativo' : 'Inativo' %></span></td>
               <td class="row-actions">
                 <a href="/access-roles/<%= r._id %>/edit">Editar</a>
-                <form method="POST" action="/access-roles/<%= r._id %>/delete" onsubmit="return confirm('Excluir este perfil?');">
-                  <button type="submit" class="link-button">Excluir</button>
+                <% if (r.isActive) { %>
+                  <form method="POST" action="/access-roles/<%= r._id %>/delete" onsubmit="return confirm('Inativar este perfil? Todos os usuários que o possuem ficarão sem essas permissões.');">
+                    <button type="submit" class="link-button">Inativar</button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/access-roles/<%= r._id %>/reactivate">
+                    <button type="submit" class="link-button link-button-positive">Reativar</button>
+                  </form>
+                <% } %>
+                <form method="POST" action="/access-roles/<%= r._id %>/hard-delete" onsubmit="return confirm('Excluir este perfil DEFINITIVAMENTE? Essa ação não pode ser desfeita e requer permissão de System Administrator.');">
+                  <button type="submit" class="link-button">Excluir definitivamente</button>
                 </form>
               </td>
             </tr>

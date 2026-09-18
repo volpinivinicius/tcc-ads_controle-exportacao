@@ -1,0 +1,53 @@
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'shipments' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= shipment && shipment._id ? '/shipments/' + shipment._id : '/shipments' %>" class="data-form">
+        <label>Referência (opcional)</label>
+        <input type="text" name="reference" value="<%= shipment ? (shipment.reference || '') : '' %>" />
+
+        <label>Empresa Exportadora</label>
+        <select name="exporterCompany" required>
+          <option value="">Selecione...</option>
+          <% companies.forEach(function(c) { %>
+            <option value="<%= c._id %>" <%= shipment && String(shipment.exporterCompany) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <% }); %>
+        </select>
+
+        <label>Empresa Importadora</label>
+        <select name="importerCompany" required>
+          <option value="">Selecione...</option>
+          <% companies.forEach(function(c) { %>
+            <option value="<%= c._id %>" <%= shipment && String(shipment.importerCompany) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+          <% }); %>
+        </select>
+
+        <label>Modal</label>
+        <select name="modal" required>
+          <option value="">Selecione...</option>
+          <% ['MARITIME', 'AIR', 'ROAD', 'OTHER'].forEach(function(m) { %>
+            <option value="<%= m %>" <%= shipment && shipment.modal === m ? 'selected' : '' %>><%= m %></option>
+          <% }); %>
+        </select>
+
+        <label>Incoterm (opcional)</label>
+        <select name="incoterm">
+          <option value="">—</option>
+          <% ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'].forEach(function(i) { %>
+            <option value="<%= i %>" <%= shipment && shipment.incoterm === i ? 'selected' : '' %>><%= i %></option>
+          <% }); %>
+        </select>
+
+        <% if (shipment && shipment._id) { %>
+          <label>Status</label>
+          <select name="status">
+            <% Object.keys(statusLabels).forEach(function(code) { %>
+              <option value="<%= code %>" <%= String(shipment.status) === code ? 'selected' : '' %>><%= code %> - <%= statusLabels[code] %></option>
+            <% }); %>
+          </select>
+          <p class="muted">A classificação (EXPORT/IMPORT/INTERCOMPANY) é calculada automaticamente a partir das empresas selecionadas.</p>
+        <% } %>
+
+        <button type="submit"><%= shipment && shipment._id ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>

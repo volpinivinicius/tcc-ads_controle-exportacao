@@ -69,7 +69,7 @@ async function updatePolicyByCompanyId(companyId, data, user) {
   const policy = await CompanyPermissionPolicy.findOneAndUpdate(
     { company: companyId },
     data,
-    { new: true, runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
   if (!policy) throw notFound();
   return policy;

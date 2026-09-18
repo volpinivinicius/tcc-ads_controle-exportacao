@@ -30,6 +30,7 @@ const catalog = [
   { code: "SHIPMENT_CREATE", resource: "SHIPMENT", description: "Create shipments" },
   { code: "SHIPMENT_UPDATE", resource: "SHIPMENT", description: "Update shipment data" },
   { code: "SHIPMENT_STATUS_UPDATE", resource: "SHIPMENT", description: "Change a shipment's status" },
+  { code: "SHIPMENT_DELETE", resource: "SHIPMENT", description: "Deactivate or delete a shipment" },
  
   { code: "SHIPMENT_NOTE_VIEW", resource: "SHIPMENT_NOTE", description: "View shipment notes" },
   { code: "SHIPMENT_NOTE_CREATE", resource: "SHIPMENT_NOTE", description: "Create shipment notes" },

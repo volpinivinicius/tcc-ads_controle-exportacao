@@ -85,14 +85,27 @@ async function createAccessRole(data, user) {
   return AccessRole.create(data);
 }
 
-async function listAccessRoles(user) {
+/** filters (all optional): scope, company (id), isActive ("true"/"false"). */
+async function listAccessRoles(user, filters = {}) {
+  const query = {};
+  if (filters.scope) query.scope = filters.scope;
+  if (filters.company) query.company = filters.company;
+  if (filters.isActive !== undefined && filters.isActive !== "") {
+    query.isActive = filters.isActive === true || filters.isActive === "true";
+  }
+
   if (hasSystemPermission(user, "ACCESS_ROLE_VIEW")) {
-    return AccessRole.find().populate("company").populate("permissions");
+    return AccessRole.find(query).populate("company").populate("permissions");
   }
   const allowedIds = companyIdsWithPermission(user, "ACCESS_ROLE_VIEW");
-  return AccessRole.find({ company: { $in: allowedIds } })
-    .populate("company")
-    .populate("permissions");
+  query.company = filters.company
+    ? filters.company // if they picked a specific company, keep it (still constrained by allowedIds below via $and semantics if needed)
+    : { $in: allowedIds };
+  if (filters.company && !allowedIds.includes(String(filters.company))) {
+    // Requested a company outside what this user is allowed to view — return nothing rather than leaking existence.
+    query.company = { $in: [] };
+  }
+  return AccessRole.find(query).populate("company").populate("permissions");
 }
 
 async function getAccessRoleById(id, user) {
@@ -124,13 +137,20 @@ async function updateAccessRole(id, data, user) {
   await validateAccessRole(merged);
 
   const role = await AccessRole.findByIdAndUpdate(id, data, {
-    new: true,
+    returnDocument: "after",
     runValidators: true,
   });
   return role;
 }
 
-async function deleteAccessRole(id, user) {
+/**
+ * Soft delete: deactivating a role immediately limits every User
+ * holding it (see authorizationService), without touching any
+ * User record. Same authorization as before: a SYSTEM-scoped role
+ * always requires a SYSTEM link; a COMPANY/ASSIGNED_SHIPMENT role
+ * requires a SYSTEM link or a link to that role's own company.
+ */
+async function deactivateAccessRole(id, user) {
   const current = await AccessRole.findById(id);
   if (!current) throw notFound();
 
@@ -139,6 +159,34 @@ async function deleteAccessRole(id, user) {
     "ACCESS_ROLE_DELETE",
     current.scope === "SYSTEM" ? null : current.company
   );
+
+  const role = await AccessRole.findByIdAndUpdate(id, { isActive: false }, { returnDocument: "after" });
+  return role;
+}
+
+async function reactivateAccessRole(id, user) {
+  const current = await AccessRole.findById(id);
+  if (!current) throw notFound();
+
+  assertCan(
+    user,
+    "ACCESS_ROLE_DELETE",
+    current.scope === "SYSTEM" ? null : current.company
+  );
+
+  const role = await AccessRole.findByIdAndUpdate(id, { isActive: true }, { returnDocument: "after" });
+  return role;
+}
+
+/**
+ * True, permanent removal — System Administrator only, regardless
+ * of the role's own scope or company (unlike deactivate, which a
+ * Company Administrator can do for their own COMPANY-scoped roles).
+ */
+async function hardDeleteAccessRole(id, user) {
+  assertCan(user, "ACCESS_ROLE_DELETE", null);
+  const current = await AccessRole.findById(id);
+  if (!current) throw notFound();
 
   await AccessRole.findByIdAndDelete(id);
   return current;
@@ -149,5 +197,7 @@ module.exports = {
   listAccessRoles,
   getAccessRoleById,
   updateAccessRole,
-  deleteAccessRole,
+  deactivateAccessRole,
+  reactivateAccessRole,
+  hardDeleteAccessRole,
 };

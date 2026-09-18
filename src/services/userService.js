@@ -11,10 +11,17 @@
  * others only see Users who share a link to one of their own
  * companies (with USER_VIEW).
  *
- * SIMPLIFICATION (documented, not an oversight): update and
- * delete are also SYSTEM-only for now, rather than allowing a
- * Company Administrator to manage members of their own company.
- * Revisit if that finer-grained delegation is needed later.
+ * SIMPLIFICATION (documented, not an oversight): general update
+ * (name, email, links) is SYSTEM-only for now, rather than
+ * allowing a Company Administrator to manage members of their own
+ * company. Revisit if that finer-grained delegation is needed.
+ *
+ * Deactivate/reactivate are the one exception: a Company
+ * Administrator CAN deactivate or reactivate a User who shares a
+ * link to their own company (with USER_DELETE) — this is what
+ * lets a company manage its own team's access without needing the
+ * System Administrator for that specific action. True hard
+ * deletion remains SYSTEM-only, unconditionally.
  */
 
 const User = require("../models/user");
@@ -23,6 +30,7 @@ const AccessRole = require("../models/accessRole");
 const {
   hasSystemPermission,
   assertCan,
+  forbidden,
   companyIdsWithPermission,
 } = require("./authorizationService");
 
@@ -36,6 +44,16 @@ function badRequest(message) {
   const error = new Error(message);
   error.status = 400;
   return error;
+}
+
+/** Throws unless actingUser is SYSTEM or shares a company link with `code` with the target's own links. */
+function assertSharedCompanyPermission(actingUser, targetLinks, code) {
+  if (hasSystemPermission(actingUser, code)) return;
+  const allowedIds = new Set(companyIdsWithPermission(actingUser, code));
+  const shared = targetLinks.some((link) =>
+    allowedIds.has(String(link.company?._id || link.company))
+  );
+  if (!shared) throw forbidden();
 }
 
 async function validateLinks(links) {
@@ -69,14 +87,26 @@ async function createUser(data, actingUser) {
   return User.create(data);
 }
 
-async function listUsers(actingUser) {
-  if (hasSystemPermission(actingUser, "USER_VIEW")) {
-    return User.find().populate("links.company").populate("links.accessRole");
+/** filters (all optional): company (id, matches any link), isActive ("true"/"false"). */
+async function listUsers(actingUser, filters = {}) {
+  const query = {};
+  if (filters.isActive !== undefined && filters.isActive !== "") {
+    query.isActive = filters.isActive === true || filters.isActive === "true";
   }
+
+  if (hasSystemPermission(actingUser, "USER_VIEW")) {
+    if (filters.company) query["links.company"] = filters.company;
+    return User.find(query).populate("links.company").populate("links.accessRole");
+  }
+
   const allowedIds = companyIdsWithPermission(actingUser, "USER_VIEW");
-  return User.find({ "links.company": { $in: allowedIds } })
-    .populate("links.company")
-    .populate("links.accessRole");
+  if (filters.company && !allowedIds.includes(String(filters.company))) {
+    // Requested a company outside what this user is allowed to view — return nothing rather than leaking existence.
+    query["links.company"] = { $in: [] };
+  } else {
+    query["links.company"] = filters.company ? filters.company : { $in: allowedIds };
+  }
+  return User.find(query).populate("links.company").populate("links.accessRole");
 }
 
 async function getUserById(id, actingUser) {
@@ -85,17 +115,7 @@ async function getUserById(id, actingUser) {
     .populate("links.accessRole");
   if (!user) throw notFound();
 
-  if (!hasSystemPermission(actingUser, "USER_VIEW")) {
-    const allowedIds = new Set(companyIdsWithPermission(actingUser, "USER_VIEW"));
-    const shared = user.links.some((link) =>
-      allowedIds.has(String(link.company?._id || link.company))
-    );
-    if (!shared) {
-      const error = new Error("Forbidden");
-      error.status = 403;
-      throw error;
-    }
-  }
+  assertSharedCompanyPermission(actingUser, user.links, "USER_VIEW");
   return user;
 }
 
@@ -110,18 +130,50 @@ async function updateUser(id, data, actingUser) {
   }
 
   const user = await User.findByIdAndUpdate(id, data, {
-    new: true,
+    returnDocument: "after",
     runValidators: true,
   });
   return user;
 }
 
-async function deleteUser(id, actingUser) {
-  assertCan(actingUser, "USER_DELETE", null);
+async function deactivateUser(id, actingUser) {
+  const target = await User.findById(id)
+    .populate("links.company")
+    .populate("links.accessRole");
+  if (!target) throw notFound();
 
+  assertSharedCompanyPermission(actingUser, target.links, "USER_DELETE");
+
+  const user = await User.findByIdAndUpdate(id, { isActive: false }, { returnDocument: "after" });
+  return user;
+}
+
+async function reactivateUser(id, actingUser) {
+  const target = await User.findById(id)
+    .populate("links.company")
+    .populate("links.accessRole");
+  if (!target) throw notFound();
+
+  assertSharedCompanyPermission(actingUser, target.links, "USER_DELETE");
+
+  const user = await User.findByIdAndUpdate(id, { isActive: true }, { returnDocument: "after" });
+  return user;
+}
+
+/** True, permanent removal — System Administrator only, unconditionally. */
+async function hardDeleteUser(id, actingUser) {
+  assertCan(actingUser, "USER_DELETE", null);
   const user = await User.findByIdAndDelete(id);
   if (!user) throw notFound();
   return user;
 }
 
-module.exports = { createUser, listUsers, getUserById, updateUser, deleteUser };
+module.exports = {
+  createUser,
+  listUsers,
+  getUserById,
+  updateUser,
+  deactivateUser,
+  reactivateUser,
+  hardDeleteUser,
+};

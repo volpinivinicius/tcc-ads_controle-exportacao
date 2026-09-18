@@ -4,9 +4,21 @@ const systemPermissionService = require("../services/systemPermissionService");
 const companyPermissionPolicyService = require("../services/companyPermissionPolicyService");
 const accessRoleService = require("../services/accessRoleService");
 const userService = require("../services/userService");
+const shipmentService = require("../services/shipmentService");
 
 const router = express.Router();
 const LINK_SLOTS = 3; // fixed number of company/accessRole rows on the User form (no client-side JS yet)
+
+const SHIPMENT_STATUS_LABELS = {
+  0: "Novo embarque",
+  1: "Aguardando liberação para faturamento",
+  2: "Parcialmente faturado",
+  3: "Aguardando coleta/embarque",
+  4: "Embarcado",
+  5: "Aguardando emissão de documentação",
+  6: "Aguardando transferência de posse",
+  7: "Encerrado",
+};
 
 /** Normalizes a checkbox field into an array (single checked value posts as a string, not an array). */
 function toArray(value) {
@@ -42,8 +54,13 @@ router.get("/profile", (req, res) => {
 
 router.get("/companies", async (req, res, next) => {
   try {
-    const companies = await companyService.listCompanies(req.user);
-    res.render("companies", { title: "Empresas", companies });
+    const filters = {
+      businessRole: req.query.businessRole,
+      isGroupCompany: req.query.isGroupCompany,
+      isActive: req.query.isActive,
+    };
+    const companies = await companyService.listCompanies(req.user, filters);
+    res.render("companies", { title: "Empresas", companies, filters });
   } catch (error) {
     next(error);
   }
@@ -102,7 +119,25 @@ router.post("/companies/:id", async (req, res) => {
 
 router.post("/companies/:id/delete", async (req, res, next) => {
   try {
-    await companyService.deleteCompany(req.params.id);
+    await companyService.deactivateCompany(req.params.id);
+    res.redirect("/companies");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/companies/:id/reactivate", async (req, res, next) => {
+  try {
+    await companyService.reactivateCompany(req.params.id);
+    res.redirect("/companies");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/companies/:id/hard-delete", async (req, res, next) => {
+  try {
+    await companyService.hardDeleteCompany(req.params.id, req.user);
     res.redirect("/companies");
   } catch (error) {
     next(error);
@@ -229,8 +264,14 @@ router.post("/company-permission-policies/:companyId/delete", async (req, res, n
 
 router.get("/access-roles", async (req, res, next) => {
   try {
-    const roles = await accessRoleService.listAccessRoles(req.user);
-    res.render("accessRoles", { title: "Perfis de Acesso", roles });
+    const filters = {
+      scope: req.query.scope,
+      company: req.query.company,
+      isActive: req.query.isActive,
+    };
+    const roles = await accessRoleService.listAccessRoles(req.user, filters);
+    const companies = await companyService.listCompanies(req.user);
+    res.render("accessRoles", { title: "Perfis de Acesso", roles, companies, filters });
   } catch (error) {
     next(error);
   }
@@ -339,7 +380,25 @@ router.post("/access-roles/:id", async (req, res) => {
 
 router.post("/access-roles/:id/delete", async (req, res, next) => {
   try {
-    await accessRoleService.deleteAccessRole(req.params.id, req.user);
+    await accessRoleService.deactivateAccessRole(req.params.id, req.user);
+    res.redirect("/access-roles");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/access-roles/:id/reactivate", async (req, res, next) => {
+  try {
+    await accessRoleService.reactivateAccessRole(req.params.id, req.user);
+    res.redirect("/access-roles");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/access-roles/:id/hard-delete", async (req, res, next) => {
+  try {
+    await accessRoleService.hardDeleteAccessRole(req.params.id, req.user);
     res.redirect("/access-roles");
   } catch (error) {
     next(error);
@@ -350,8 +409,13 @@ router.post("/access-roles/:id/delete", async (req, res, next) => {
 
 router.get("/users", async (req, res, next) => {
   try {
-    const users = await userService.listUsers(req.user);
-    res.render("users", { title: "Usuários", users });
+    const filters = {
+      company: req.query.company,
+      isActive: req.query.isActive,
+    };
+    const users = await userService.listUsers(req.user, filters);
+    const companies = await companyService.listCompanies(req.user);
+    res.render("users", { title: "Usuários", users, companies, filters });
   } catch (error) {
     next(error);
   }
@@ -457,7 +521,25 @@ router.post("/users/:id", async (req, res) => {
 
 router.post("/users/:id/delete", async (req, res, next) => {
   try {
-    await userService.deleteUser(req.params.id, req.user);
+    await userService.deactivateUser(req.params.id, req.user);
+    res.redirect("/users");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/users/:id/reactivate", async (req, res, next) => {
+  try {
+    await userService.reactivateUser(req.params.id, req.user);
+    res.redirect("/users");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/users/:id/hard-delete", async (req, res, next) => {
+  try {
+    await userService.hardDeleteUser(req.params.id, req.user);
     res.redirect("/users");
   } catch (error) {
     next(error);
@@ -466,8 +548,155 @@ router.post("/users/:id/delete", async (req, res, next) => {
 
 // ---------- Placeholders ----------
 
-router.get("/shipments", (req, res) => {
-  res.render("placeholder", { title: "Embarques", activePage: "shipments" });
+router.get("/shipments", async (req, res, next) => {
+  try {
+    const filters = {
+      modal: req.query.modal,
+      processType: req.query.processType,
+      status: req.query.status,
+      isActive: req.query.isActive,
+    };
+    const shipments = await shipmentService.listShipments(req.user, filters);
+    res.render("shipments", {
+      title: "Embarques",
+      shipments,
+      filters,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/shipments/new", async (req, res, next) => {
+  try {
+    const companies = await companyService.listCompanies(req.user);
+    res.render("forms/shipmentForm", {
+      title: "Novo Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: null,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments", async (req, res) => {
+  try {
+    await shipmentService.createShipment(
+      {
+        reference: req.body.reference || undefined,
+        exporterCompany: req.body.exporterCompany,
+        importerCompany: req.body.importerCompany,
+        modal: req.body.modal,
+        incoterm: req.body.incoterm || undefined,
+      },
+      req.user
+    );
+    res.redirect("/shipments");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    res.status(error.status || 500).render("forms/shipmentForm", {
+      title: "Novo Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: req.body,
+      error: error.message,
+    });
+  }
+});
+
+router.get("/shipments/:id", async (req, res, next) => {
+  try {
+    const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
+    res.render("shipmentDetail", {
+      title: "Embarque " + (shipment.reference || shipment._id),
+      shipment,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/shipments/:id/edit", async (req, res, next) => {
+  try {
+    const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
+    const companies = await companyService.listCompanies(req.user);
+    res.render("forms/shipmentForm", {
+      title: "Editar Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: {
+        _id: shipment._id,
+        reference: shipment.reference,
+        exporterCompany: String(shipment.exporterCompany?._id || shipment.exporterCompany),
+        importerCompany: String(shipment.importerCompany?._id || shipment.importerCompany),
+        modal: shipment.modal,
+        incoterm: shipment.incoterm,
+        status: shipment.status,
+      },
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id", async (req, res) => {
+  try {
+    await shipmentService.updateShipment(
+      req.params.id,
+      {
+        reference: req.body.reference || undefined,
+        exporterCompany: req.body.exporterCompany,
+        importerCompany: req.body.importerCompany,
+        modal: req.body.modal,
+        incoterm: req.body.incoterm || undefined,
+        status: req.body.status !== undefined ? Number(req.body.status) : undefined,
+      },
+      req.user
+    );
+    res.redirect("/shipments");
+  } catch (error) {
+    const companies = await companyService.listCompanies(req.user);
+    res.status(error.status || 500).render("forms/shipmentForm", {
+      title: "Editar Embarque",
+      companies,
+      statusLabels: SHIPMENT_STATUS_LABELS,
+      shipment: { ...req.body, _id: req.params.id },
+      error: error.message,
+    });
+  }
+});
+
+router.post("/shipments/:id/delete", async (req, res, next) => {
+  try {
+    await shipmentService.deactivateShipment(req.params.id, req.user);
+    res.redirect("/shipments");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/reactivate", async (req, res, next) => {
+  try {
+    await shipmentService.reactivateShipment(req.params.id, req.user);
+    res.redirect("/shipments");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/hard-delete", async (req, res, next) => {
+  try {
+    await shipmentService.hardDeleteShipment(req.params.id, req.user);
+    res.redirect("/shipments");
+  } catch (error) {
+    next(error);
+  }
 });
 
 router.get("/bookings", (req, res) => {
