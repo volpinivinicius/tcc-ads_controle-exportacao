@@ -1,0 +1,58 @@
+<%
+function toDateInput(d) {
+  if (!d) return '';
+  return new Date(d).toISOString().slice(0, 10);
+}
+%>
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'bookings' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= booking && booking._id ? '/bookings/' + booking._id : '/bookings' %>" class="data-form">
+        <label>Nº do Booking</label>
+        <input type="text" name="bookingNumber" value="<%= booking ? (booking.bookingNumber || '') : '' %>" required />
+
+        <label>Armador</label>
+        <input type="text" name="carrier" value="<%= booking ? (booking.carrier || '') : '' %>" required />
+
+        <label>Navio (opcional)</label>
+        <input type="text" name="vessel" value="<%= booking ? (booking.vessel || '') : '' %>" />
+
+        <label>Viagem (opcional)</label>
+        <input type="text" name="voyage" value="<%= booking ? (booking.voyage || '') : '' %>" />
+
+        <label>Porto de Origem</label>
+        <input type="text" name="portOfLoading" value="<%= booking ? (booking.portOfLoading || '') : '' %>" required />
+
+        <label>Porto de Destino</label>
+        <input type="text" name="portOfDischarge" value="<%= booking ? (booking.portOfDischarge || '') : '' %>" required />
+
+        <label>ETD - Previsão de Saída (opcional)</label>
+        <input type="date" name="estimatedDeparture" value="<%= booking ? toDateInput(booking.estimatedDeparture) : '' %>" />
+
+        <label>ETA - Previsão de Chegada (opcional)</label>
+        <input type="date" name="estimatedArrival" value="<%= booking ? toDateInput(booking.estimatedArrival) : '' %>" />
+
+        <label>Deadline de Carga (opcional)</label>
+        <input type="date" name="cargoCutoff" value="<%= booking ? toDateInput(booking.cargoCutoff) : '' %>" />
+
+        <label>Deadline Documental (opcional)</label>
+        <input type="date" name="documentCutoff" value="<%= booking ? toDateInput(booking.documentCutoff) : '' %>" />
+
+        <label>Containers Solicitados</label>
+        <% for (var i = 0; i < containerSlots; i++) { %>
+          <% var rc = (booking && booking.requestedContainers && booking.requestedContainers[i]) || {}; %>
+          <div class="link-slot">
+            <select name="requestedContainers[<%= i %>][size]">
+              <option value="">—</option>
+              <% ['20FT', '40FT', '40HC'].forEach(function(s) { %>
+                <option value="<%= s %>" <%= rc.size === s ? 'selected' : '' %>><%= s %></option>
+              <% }); %>
+            </select>
+            <input type="number" name="requestedContainers[<%= i %>][quantity]" min="1" placeholder="Quantidade" value="<%= rc.quantity || '' %>" />
+          </div>
+        <% } %>
+
+        <button type="submit"><%= booking && booking._id ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>

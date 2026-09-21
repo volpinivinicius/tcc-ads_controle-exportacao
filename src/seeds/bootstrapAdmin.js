@@ -1,30 +1,26 @@
-/**
- * Creates the first Company, SYSTEM-scoped AccessRole (with every
- * SystemPermission), and admin User — solving the chicken-and-egg
- * problem of POST /api/users requiring a SYSTEM token that doesn't
- * exist yet. Idempotent: safe to re-run, does nothing if a User
- * with the given email already exists.
- *
- * Values come from ADMIN_* env vars, falling back to defaults
- * (see .env.example). Change the default password immediately
- * after first login.
- *
- * Does not keep the AccessRole's permissions in sync with the
- * catalog after creation — if new SystemPermissions are added
- * later, grant them to this role manually through the app.
- */
-
 const Company = require("../models/company");
 const SystemPermission = require("../models/systemPermission");
 const AccessRole = require("../models/accessRole");
 const User = require("../models/user");
+
+async function syncSystemAdministratorPermissions() {
+  const role = await AccessRole.findOne({ scope: "SYSTEM", name: "System Administrator" });
+  if (!role) return; // nothing to sync yet — bootstrapAdmin() will create it
+
+  const allPermissions = await SystemPermission.find();
+  await AccessRole.findByIdAndUpdate(role._id, {
+    permissions: allPermissions.map((p) => p._id),
+  });
+  console.log(`Synced System Administrator role with ${allPermissions.length} permissions`);
+}
 
 async function bootstrapAdmin() {
   const email = (process.env.ADMIN_EMAIL || "admin@example.com").toLowerCase();
 
   const existing = await User.findOne({ email });
   if (existing) {
-    console.log(`Admin user already exists (${email}); skipping bootstrap.`);
+    console.log(`Admin user already exists (${email}); skipping creation.`);
+    await syncSystemAdministratorPermissions();
     return;
   }
 
@@ -70,4 +66,4 @@ async function bootstrapAdmin() {
   console.log(`IMPORTANT: log in and change this password immediately: "${password}"`);
 }
 
-module.exports = { bootstrapAdmin };
+module.exports = { bootstrapAdmin, syncSystemAdministratorPermissions };

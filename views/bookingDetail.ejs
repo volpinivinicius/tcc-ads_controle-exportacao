@@ -1,0 +1,73 @@
+<%
+function fmtDate(d) {
+  return d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+}
+%>
+<%- include('partials/head', { title: title }) %>
+<%- include('partials/sidebar', { activePage: 'bookings' }) %>
+      <div class="page-header">
+        <h1>Booking <%= booking.bookingNumber %></h1>
+        <a href="/bookings" class="filter-clear">&larr; Voltar para Bookings</a>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-row">
+          <span class="detail-label">Armador</span>
+          <span class="detail-value"><%= booking.carrier %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Navio / Viagem</span>
+          <span class="detail-value"><%= booking.vessel || '—' %><%= booking.voyage ? ' / ' + booking.voyage : '' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Porto de Origem</span>
+          <span class="detail-value"><%= booking.portOfLoading %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Porto de Destino</span>
+          <span class="detail-value"><%= booking.portOfDischarge %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">ETD</span>
+          <span class="detail-value"><%= fmtDate(booking.estimatedDeparture) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">ETA</span>
+          <span class="detail-value"><%= fmtDate(booking.estimatedArrival) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Deadline de Carga</span>
+          <span class="detail-value"><%= fmtDate(booking.cargoCutoff) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Deadline Documental</span>
+          <span class="detail-value"><%= fmtDate(booking.documentCutoff) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Containers Solicitados</span>
+          <span class="detail-value"><%= booking.requestedContainers.map(function(c) { return c.quantity + 'x' + c.size; }).join(', ') %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Situação</span>
+          <span class="detail-value"><span class="status-badge <%= booking.isActive ? 'status-active' : 'status-inactive' %>"><%= booking.isActive ? 'Ativo' : 'Inativo' %></span></span>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <a href="/bookings/<%= booking._id %>/edit" class="button-link">Editar</a>
+        <% if (booking.isActive) { %>
+          <form method="POST" action="/bookings/<%= booking._id %>/delete" onsubmit="return confirm('Inativar este booking?');">
+            <button type="submit" class="link-button">Inativar</button>
+          </form>
+        <% } else { %>
+          <form method="POST" action="/bookings/<%= booking._id %>/reactivate">
+            <button type="submit" class="link-button link-button-positive">Reativar</button>
+          </form>
+        <% } %>
+        <form method="POST" action="/bookings/<%= booking._id %>/hard-delete" onsubmit="return confirm('Excluir este booking DEFINITIVAMENTE? Essa ação não pode ser desfeita e requer permissão de System Administrator.');">
+          <button type="submit" class="link-button">Excluir definitivamente</button>
+        </form>
+      </div>
+
+      <!-- Quando Container existir, os containers deste booking ganham uma seção aqui. -->
+<%- include('partials/footer') %>

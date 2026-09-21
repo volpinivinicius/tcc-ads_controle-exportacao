@@ -13,6 +13,7 @@ const accessRoleRoutes = require("./accessRoleRoutes");
 const userRoutes = require("./userRoutes");
 const shipmentRoutes = require("./shipmentRoutes");
 const bookingRoutes = require("./bookingRoutes");
+const containerRoutes = require("./containerRoutes");
 
 const router = express.Router();
 
@@ -28,5 +29,6 @@ router.use("/access-roles", accessRoleRoutes);
 router.use("/users", userRoutes);
 router.use("/shipments", shipmentRoutes);
 router.use("/bookings", bookingRoutes);
+router.use("/containers", containerRoutes);
 
 module.exports = router;
