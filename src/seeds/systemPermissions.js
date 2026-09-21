@@ -41,6 +41,7 @@ const catalog = [
   { code: "BOOKING_VIEW", resource: "BOOKING", description: "View bookings" },
   { code: "BOOKING_CREATE", resource: "BOOKING", description: "Create bookings" },
   { code: "BOOKING_UPDATE", resource: "BOOKING", description: "Update booking data, including deadlines" },
+  { code: "BOOKING_DELETE", resource: "BOOKING", description: "Deactivate or delete a booking" },
  
   { code: "CONTAINER_VIEW", resource: "CONTAINER", description: "View containers" },
   { code: "CONTAINER_UPDATE", resource: "CONTAINER", description: "Update container data, including container number" },

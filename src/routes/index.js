@@ -12,6 +12,7 @@ const companyPermissionPolicyRoutes = require("./companyPermissionPolicyRoutes")
 const accessRoleRoutes = require("./accessRoleRoutes");
 const userRoutes = require("./userRoutes");
 const shipmentRoutes = require("./shipmentRoutes");
+const bookingRoutes = require("./bookingRoutes");
 
 const router = express.Router();
 
@@ -26,5 +27,6 @@ router.use("/company-permission-policies", companyPermissionPolicyRoutes);
 router.use("/access-roles", accessRoleRoutes);
 router.use("/users", userRoutes);
 router.use("/shipments", shipmentRoutes);
+router.use("/bookings", bookingRoutes);
 
 module.exports = router;
