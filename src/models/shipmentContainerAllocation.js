@@ -1,18 +1,47 @@
+const mongoose = require("mongoose");
+
 /**
- * Shipment Container Allocation Schema
+ * BASIC version — see the model's original design comment
+ * (resolves the N:N relationship between Shipment and Container).
  *
- * Represents the association between a Shipment and a Container,
- * resolving the many-to-many relationship between them: a single
- * Container can carry cargo from more than one Shipment (for
- * example, two Shipments each occupying part of the same
- * container), and a single Shipment's cargo can be split across
- * more than one Container.
+ * A given (shipment, container) pair is unique — to change the
+ * allocated weight/volume, update the existing record rather
+ * than creating a duplicate. No "quantity" field: a Container is
+ * a single physical unit, so counting it doesn't apply here —
+ * weightKg/volumeM3 already express how much of the Shipment's
+ * cargo occupies it, for the case where the container is shared
+ * with another Shipment.
  *
- * Since a Shipment is itself the commercial invoice for its
- * process, this allocation is what links a Container to the
- * invoice(s) it physically carries.
- *
- * May carry details specific to that allocation, such as the
- * volume, weight, or quantity of the Shipment's cargo occupying
- * that particular Container.
+ * ASSIGNED_SHIPMENT visibility (a carrier/warehouse Company
+ * seeing only the Containers its assigned Shipments are
+ * allocated to) is deferred: it depends on the Shipment knowing
+ * which Company is its assigned carrier/warehouse, which lives in
+ * exportStage/importStage — not yet implemented. For now,
+ * authorization follows the same rule as Shipment itself
+ * (exporter OR importer company, or SYSTEM).
  */
+const shipmentContainerAllocationSchema = new mongoose.Schema(
+  {
+    shipment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shipment",
+      required: true,
+    },
+    container: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Container",
+      required: true,
+    },
+    weightKg: { type: Number, min: 0 },
+    volumeM3: { type: Number, min: 0 },
+    isActive: { type: Boolean, required: true, default: true },
+  },
+  { timestamps: true }
+);
+
+shipmentContainerAllocationSchema.index({ shipment: 1, container: 1 }, { unique: true });
+
+module.exports = mongoose.model(
+  "ShipmentContainerAllocation",
+  shipmentContainerAllocationSchema
+);

@@ -1,0 +1,30 @@
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'allocations' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= allocation && allocation._id ? '/allocations/' + allocation._id : '/allocations' %>" class="data-form">
+        <label>Embarque</label>
+        <select name="shipment" required>
+          <option value="">Selecione...</option>
+          <% shipments.forEach(function(s) { %>
+            <option value="<%= s._id %>" <%= allocation && String(allocation.shipment) === String(s._id) ? 'selected' : '' %>><%= s.reference || s._id %></option>
+          <% }); %>
+        </select>
+
+        <label>Container</label>
+        <select name="container" required>
+          <option value="">Selecione...</option>
+          <% containers.forEach(function(c) { %>
+            <option value="<%= c._id %>" <%= allocation && String(allocation.container) === String(c._id) ? 'selected' : '' %>><%= c.containerNumber || c._id %> (<%= c.size %>)</option>
+          <% }); %>
+        </select>
+
+        <label>Peso em kg (opcional)</label>
+        <input type="number" name="weightKg" min="0" step="0.01" value="<%= allocation ? (allocation.weightKg || '') : '' %>" />
+
+        <label>Volume em m³ (opcional)</label>
+        <input type="number" name="volumeM3" min="0" step="0.01" value="<%= allocation ? (allocation.volumeM3 || '') : '' %>" />
+
+        <button type="submit"><%= allocation && allocation._id ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>

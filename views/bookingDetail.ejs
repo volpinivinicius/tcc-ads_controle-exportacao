@@ -69,5 +69,25 @@ function fmtDate(d) {
         </form>
       </div>
 
-      <!-- Quando Container existir, os containers deste booking ganham uma seção aqui. -->
+      <h2 style="font-size: 15px; margin-top: 1.5rem;">Containers deste Booking</h2>
+      <table class="data-table">
+        <thead>
+          <tr><th>Nº Container</th><th>Tamanho</th><th>Retirada</th><th>Gate-in</th><th>Devolução</th><th>Situação</th></tr>
+        </thead>
+        <tbody>
+          <% if (containers.length === 0) { %>
+            <tr><td colspan="6">Nenhum container registrado para este booking ainda.</td></tr>
+          <% } %>
+          <% containers.forEach(function(c) { %>
+            <tr>
+              <td><a href="/containers/<%= c._id %>"><%= c.containerNumber || c._id %></a></td>
+              <td><%= c.size %></td>
+              <td><%= c.emptyPickupDate ? new Date(c.emptyPickupDate).toLocaleDateString('pt-BR') : '—' %></td>
+              <td><%= c.gateInDate ? new Date(c.gateInDate).toLocaleDateString('pt-BR') : '—' %></td>
+              <td><%= c.returnDate ? new Date(c.returnDate).toLocaleDateString('pt-BR') : '—' %></td>
+              <td><span class="status-badge <%= c.isActive ? 'status-active' : 'status-inactive' %>"><%= c.isActive ? 'Ativo' : 'Inativo' %></span></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
 <%- include('partials/footer') %>

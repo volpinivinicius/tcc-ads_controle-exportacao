@@ -1,0 +1,90 @@
+<%
+function fmtDate(d) {
+  return d ? new Date(d).toLocaleDateString('pt-BR') : '—';
+}
+%>
+<%- include('partials/head', { title: title }) %>
+<%- include('partials/sidebar', { activePage: 'containers' }) %>
+      <div class="page-header">
+        <h1>Container <%= container.containerNumber || container._id %></h1>
+        <a href="/containers" class="filter-clear">&larr; Voltar para Containers</a>
+      </div>
+
+      <div class="detail-card">
+        <div class="detail-row">
+          <span class="detail-label">Booking</span>
+          <span class="detail-value"><% if (container.booking) { %><a href="/bookings/<%= container.booking._id %>"><%= container.booking.bookingNumber %></a><% } else { %>—<% } %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Tamanho</span>
+          <span class="detail-value"><%= container.size %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Nº do Container</span>
+          <span class="detail-value"><%= container.containerNumber || '— (a definir)' %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Data de Retirada Vazio</span>
+          <span class="detail-value"><%= fmtDate(container.emptyPickupDate) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Data de Gate-in</span>
+          <span class="detail-value"><%= fmtDate(container.gateInDate) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Data de Devolução</span>
+          <span class="detail-value"><%= fmtDate(container.returnDate) %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Situação</span>
+          <span class="detail-value"><span class="status-badge <%= container.isActive ? 'status-active' : 'status-inactive' %>"><%= container.isActive ? 'Ativo' : 'Inativo' %></span></span>
+        </div>
+      </div>
+
+      <div class="detail-actions">
+        <a href="/containers/<%= container._id %>/edit" class="button-link">Editar</a>
+      </div>
+
+      <h2 style="font-size: 15px; margin-top: 1.5rem;">Embarques alocados neste container</h2>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <table class="data-table">
+        <thead>
+          <tr><th>Embarque</th><th>Peso (kg)</th><th>Volume (m³)</th></tr>
+        </thead>
+        <tbody>
+          <% if (allocations.length === 0) { %>
+            <tr><td colspan="3">Nenhum embarque alocado neste container ainda.</td></tr>
+          <% } %>
+          <% allocations.forEach(function(a) { %>
+            <tr>
+              <td><% if (a.shipment) { %><a href="/shipments/<%= a.shipment._id %>"><%= a.shipment.reference || a.shipment._id %></a><% } else { %>—<% } %></td>
+              <td><%= a.weightKg || '—' %></td>
+              <td><%= a.volumeM3 || '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+
+      <h2 style="font-size: 15px; margin-top: 1.5rem;">Vincular a um embarque</h2>
+      <% if (availableShipments.length === 0) { %>
+        <p class="muted">Nenhum embarque disponível para vincular (todos já estão alocados a este container, ou nenhum foi cadastrado ainda).</p>
+      <% } else { %>
+        <form method="POST" action="/containers/<%= container._id %>/allocate" class="data-form">
+          <label>Embarque</label>
+          <select name="shipment" required>
+            <option value="">Selecione...</option>
+            <% availableShipments.forEach(function(s) { %>
+              <option value="<%= s._id %>"><%= s.reference || s._id %></option>
+            <% }); %>
+          </select>
+
+          <label>Peso em kg (opcional)</label>
+          <input type="number" name="weightKg" min="0" step="0.01" />
+
+          <label>Volume em m³ (opcional)</label>
+          <input type="number" name="volumeM3" min="0" step="0.01" />
+
+          <button type="submit">Vincular</button>
+        </form>
+      <% } %>
+<%- include('partials/footer') %>

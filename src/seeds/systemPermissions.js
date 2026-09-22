@@ -47,6 +47,11 @@ const catalog = [
   { code: "CONTAINER_CREATE", resource: "CONTAINER", description: "Register a container under a booking" },
   { code: "CONTAINER_UPDATE", resource: "CONTAINER", description: "Update container data, including container number" },
   { code: "CONTAINER_DELETE", resource: "CONTAINER", description: "Deactivate or delete a container" },
+
+  { code: "ALLOCATION_VIEW", resource: "ALLOCATION", description: "View shipment-container allocations" },
+  { code: "ALLOCATION_CREATE", resource: "ALLOCATION", description: "Allocate a shipment's cargo to a container" },
+  { code: "ALLOCATION_UPDATE", resource: "ALLOCATION", description: "Update a shipment-container allocation" },
+  { code: "ALLOCATION_DELETE", resource: "ALLOCATION", description: "Deactivate or delete a shipment-container allocation" },
 ];
  
 async function seedSystemPermissions() {

@@ -7,6 +7,7 @@ const userService = require("../services/userService");
 const shipmentService = require("../services/shipmentService");
 const bookingService = require("../services/bookingService");
 const containerService = require("../services/containerService");
+const allocationService = require("../services/shipmentContainerAllocationService");
 
 const router = express.Router();
 const LINK_SLOTS = 3; // fixed number of company/accessRole rows on the User form (no client-side JS yet)
@@ -623,13 +624,61 @@ router.post("/shipments", async (req, res) => {
 router.get("/shipments/:id", async (req, res, next) => {
   try {
     const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
+    const allocations = await allocationService.listAllocations(req.user, { shipment: req.params.id });
+    const allContainers = await containerService.listContainers(req.user, { isActive: "true" });
+    const allocatedContainerIds = new Set(
+      allocations.map((a) => String(a.container?._id || a.container))
+    );
+    const availableContainers = allContainers.filter(
+      (c) => !allocatedContainerIds.has(String(c._id))
+    );
     res.render("shipmentDetail", {
       title: "Embarque " + (shipment.reference || shipment._id),
       shipment,
+      allocations,
+      availableContainers,
       statusLabels: SHIPMENT_STATUS_LABELS,
+      error: null,
     });
   } catch (error) {
     next(error);
+  }
+});
+
+router.post("/shipments/:id/allocate-container", async (req, res, next) => {
+  try {
+    await allocationService.createAllocation(
+      {
+        shipment: req.params.id,
+        container: req.body.container,
+        weightKg: req.body.weightKg || undefined,
+        volumeM3: req.body.volumeM3 || undefined,
+      },
+      req.user
+    );
+    res.redirect("/shipments/" + req.params.id);
+  } catch (error) {
+    try {
+      const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
+      const allocations = await allocationService.listAllocations(req.user, { shipment: req.params.id });
+      const allContainers = await containerService.listContainers(req.user, { isActive: "true" });
+      const allocatedContainerIds = new Set(
+        allocations.map((a) => String(a.container?._id || a.container))
+      );
+      const availableContainers = allContainers.filter(
+        (c) => !allocatedContainerIds.has(String(c._id))
+      );
+      res.status(error.status || 500).render("shipmentDetail", {
+        title: "Embarque " + (shipment.reference || shipment._id),
+        shipment,
+        allocations,
+        availableContainers,
+        statusLabels: SHIPMENT_STATUS_LABELS,
+        error: error.message,
+      });
+    } catch (innerError) {
+      next(innerError);
+    }
   }
 });
 
@@ -762,7 +811,8 @@ router.post("/bookings", async (req, res) => {
 router.get("/bookings/:id", async (req, res, next) => {
   try {
     const booking = await bookingService.getBookingById(req.params.id, req.user);
-    res.render("bookingDetail", { title: "Booking " + booking.bookingNumber, booking });
+    const containers = await containerService.listContainers(req.user, { booking: req.params.id });
+    res.render("bookingDetail", { title: "Booking " + booking.bookingNumber, booking, containers });
   } catch (error) {
     next(error);
   }
@@ -884,6 +934,65 @@ router.post("/containers", async (req, res) => {
   }
 });
 
+router.get("/containers/:id", async (req, res, next) => {
+  try {
+    const container = await containerService.getContainerById(req.params.id, req.user);
+    const allocations = await allocationService.listAllocations(req.user, { container: req.params.id });
+    const allShipments = await shipmentService.listShipments(req.user);
+    const allocatedShipmentIds = new Set(
+      allocations.map((a) => String(a.shipment?._id || a.shipment))
+    );
+    const availableShipments = allShipments.filter(
+      (s) => !allocatedShipmentIds.has(String(s._id))
+    );
+    res.render("containerDetail", {
+      title: "Container " + (container.containerNumber || container._id),
+      container,
+      allocations,
+      availableShipments,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/containers/:id/allocate", async (req, res, next) => {
+  try {
+    await allocationService.createAllocation(
+      {
+        shipment: req.body.shipment,
+        container: req.params.id,
+        weightKg: req.body.weightKg || undefined,
+        volumeM3: req.body.volumeM3 || undefined,
+      },
+      req.user
+    );
+    res.redirect("/containers/" + req.params.id);
+  } catch (error) {
+    try {
+      const container = await containerService.getContainerById(req.params.id, req.user);
+      const allocations = await allocationService.listAllocations(req.user, { container: req.params.id });
+      const allShipments = await shipmentService.listShipments(req.user);
+      const allocatedShipmentIds = new Set(
+        allocations.map((a) => String(a.shipment?._id || a.shipment))
+      );
+      const availableShipments = allShipments.filter(
+        (s) => !allocatedShipmentIds.has(String(s._id))
+      );
+      res.status(error.status || 500).render("containerDetail", {
+        title: "Container " + (container.containerNumber || container._id),
+        container,
+        allocations,
+        availableShipments,
+        error: error.message,
+      });
+    } catch (innerError) {
+      next(innerError);
+    }
+  }
+});
+
 router.get("/containers/:id/edit", async (req, res, next) => {
   try {
     const container = await containerService.getContainerById(req.params.id, req.user);
@@ -955,6 +1064,137 @@ router.post("/containers/:id/hard-delete", async (req, res, next) => {
   try {
     await containerService.hardDeleteContainer(req.params.id, req.user);
     res.redirect("/containers");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/allocations", async (req, res, next) => {
+  try {
+    const filters = {
+      shipment: req.query.shipment,
+      container: req.query.container,
+      isActive: req.query.isActive,
+    };
+    const allocations = await allocationService.listAllocations(req.user, filters);
+    res.render("allocations", { title: "Alocações", allocations, filters });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/allocations/new", async (req, res, next) => {
+  try {
+    const shipments = await shipmentService.listShipments(req.user);
+    const containers = await containerService.listContainers(req.user);
+    res.render("forms/allocationForm", {
+      title: "Nova Alocação",
+      shipments,
+      containers,
+      allocation: null,
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/allocations", async (req, res) => {
+  try {
+    await allocationService.createAllocation(
+      {
+        shipment: req.body.shipment,
+        container: req.body.container,
+        weightKg: req.body.weightKg || undefined,
+        volumeM3: req.body.volumeM3 || undefined,
+      },
+      req.user
+    );
+    res.redirect("/allocations");
+  } catch (error) {
+    const shipments = await shipmentService.listShipments(req.user);
+    const containers = await containerService.listContainers(req.user);
+    res.status(error.status || 500).render("forms/allocationForm", {
+      title: "Nova Alocação",
+      shipments,
+      containers,
+      allocation: req.body,
+      error: error.message,
+    });
+  }
+});
+
+router.get("/allocations/:id/edit", async (req, res, next) => {
+  try {
+    const allocation = await allocationService.getAllocationById(req.params.id, req.user);
+    const shipments = await shipmentService.listShipments(req.user);
+    const containers = await containerService.listContainers(req.user);
+    res.render("forms/allocationForm", {
+      title: "Editar Alocação",
+      shipments,
+      containers,
+      allocation: {
+        _id: allocation._id,
+        shipment: String(allocation.shipment?._id || allocation.shipment),
+        container: String(allocation.container?._id || allocation.container),
+        weightKg: allocation.weightKg,
+        volumeM3: allocation.volumeM3,
+      },
+      error: null,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/allocations/:id", async (req, res) => {
+  try {
+    await allocationService.updateAllocation(
+      req.params.id,
+      {
+        shipment: req.body.shipment,
+        container: req.body.container,
+        weightKg: req.body.weightKg || undefined,
+        volumeM3: req.body.volumeM3 || undefined,
+      },
+      req.user
+    );
+    res.redirect("/allocations");
+  } catch (error) {
+    const shipments = await shipmentService.listShipments(req.user);
+    const containers = await containerService.listContainers(req.user);
+    res.status(error.status || 500).render("forms/allocationForm", {
+      title: "Editar Alocação",
+      shipments,
+      containers,
+      allocation: { ...req.body, _id: req.params.id },
+      error: error.message,
+    });
+  }
+});
+
+router.post("/allocations/:id/delete", async (req, res, next) => {
+  try {
+    await allocationService.deactivateAllocation(req.params.id, req.user);
+    res.redirect("/allocations");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/allocations/:id/reactivate", async (req, res, next) => {
+  try {
+    await allocationService.reactivateAllocation(req.params.id, req.user);
+    res.redirect("/allocations");
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/allocations/:id/hard-delete", async (req, res, next) => {
+  try {
+    await allocationService.hardDeleteAllocation(req.params.id, req.user);
+    res.redirect("/allocations");
   } catch (error) {
     next(error);
   }

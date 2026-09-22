@@ -14,6 +14,7 @@ const userRoutes = require("./userRoutes");
 const shipmentRoutes = require("./shipmentRoutes");
 const bookingRoutes = require("./bookingRoutes");
 const containerRoutes = require("./containerRoutes");
+const shipmentContainerAllocationRoutes = require("./shipmentContainerAllocationRoutes");
 
 const router = express.Router();
 
@@ -30,5 +31,6 @@ router.use("/users", userRoutes);
 router.use("/shipments", shipmentRoutes);
 router.use("/bookings", bookingRoutes);
 router.use("/containers", containerRoutes);
+router.use("/allocations", shipmentContainerAllocationRoutes);
 
 module.exports = router;
