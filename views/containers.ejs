@@ -29,7 +29,7 @@
           <% } %>
           <% containers.forEach(function(c) { %>
             <tr>
-              <td><a href="/containers/<%= c._id %>"><%= c.containerNumber || '— (a definir)' %></a></td>
+              <td><a href="/containers/<%= c._id %>" class="code"><%= c.containerNumber || '— (a definir)' %></a></td>
               <td><% if (c.booking) { %><a href="/bookings/<%= c.booking._id %>"><%= c.booking.bookingNumber %></a><% } else { %>—<% } %></td>
               <td><%= c.size %></td>
               <td><%= c.emptyPickupDate ? new Date(c.emptyPickupDate).toLocaleDateString('pt-BR') : '—' %></td>

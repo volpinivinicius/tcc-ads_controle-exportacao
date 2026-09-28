@@ -41,7 +41,7 @@
           <% } %>
           <% shipments.forEach(function(s) { %>
             <tr>
-              <td><a href="/shipments/<%= s._id %>"><%= s.reference || s._id %></a></td>
+              <td><a href="/shipments/<%= s._id %>" class="code"><%= s.reference || s._id %></a></td>
               <td><%= s.exporterCompany ? s.exporterCompany.name : '—' %></td>
               <td><%= s.importerCompany ? s.importerCompany.name : '—' %></td>
               <td><%= s.modal %></td>

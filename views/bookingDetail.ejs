@@ -6,7 +6,7 @@ function fmtDate(d) {
 <%- include('partials/head', { title: title }) %>
 <%- include('partials/sidebar', { activePage: 'bookings' }) %>
       <div class="page-header">
-        <h1>Booking <%= booking.bookingNumber %></h1>
+        <h1>Booking <span class="code"><%= booking.bookingNumber %></span></h1>
         <a href="/bookings" class="filter-clear">&larr; Voltar para Bookings</a>
       </div>
 
@@ -52,7 +52,7 @@ function fmtDate(d) {
           <% } %>
           <% containers.forEach(function(c) { %>
             <tr>
-              <td><a href="/containers/<%= c._id %>"><%= c.containerNumber || c._id %></a></td>
+              <td><a href="/containers/<%= c._id %>" class="code"><%= c.containerNumber || c._id %></a></td>
               <td><%= c.size %></td>
               <td><%= c.emptyPickupDate ? new Date(c.emptyPickupDate).toLocaleDateString('pt-BR') : '—' %></td>
               <td><%= c.gateInDate ? new Date(c.gateInDate).toLocaleDateString('pt-BR') : '—' %></td>

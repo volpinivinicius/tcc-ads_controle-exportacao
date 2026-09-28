@@ -6,15 +6,15 @@ function fmtDate(d) {
 <%- include('partials/head', { title: title }) %>
 <%- include('partials/sidebar', { activePage: 'containers' }) %>
       <div class="page-header">
-        <h1>Container <%= container.containerNumber || container._id %></h1>
+        <h1>Container <span class="code"><%= container.containerNumber || container._id %></span></h1>
         <a href="/containers" class="filter-clear">&larr; Voltar para Containers</a>
       </div>
 
       <div class="detail-card">
         <div class="detail-grid">
-          <div class="detail-field"><span class="detail-label">Booking</span><span class="detail-value"><% if (container.booking) { %><a href="/bookings/<%= container.booking._id %>"><%= container.booking.bookingNumber %></a><% } else { %>—<% } %></span></div>
+          <div class="detail-field"><span class="detail-label">Booking</span><span class="detail-value code"><% if (container.booking) { %><a href="/bookings/<%= container.booking._id %>"><%= container.booking.bookingNumber %></a><% } else { %>—<% } %></span></div>
           <div class="detail-field"><span class="detail-label">Tamanho</span><span class="detail-value"><%= container.size %></span></div>
-          <div class="detail-field"><span class="detail-label">Nº do Container</span><span class="detail-value"><%= container.containerNumber || '— (a definir)' %></span></div>
+          <div class="detail-field"><span class="detail-label">Nº do Container</span><span class="detail-value code"><%= container.containerNumber || '— (a definir)' %></span></div>
           <div class="detail-field"><span class="detail-label">Data de Retirada Vazio</span><span class="detail-value"><%= fmtDate(container.emptyPickupDate) %></span></div>
           <div class="detail-field"><span class="detail-label">Data de Gate-in</span><span class="detail-value"><%= fmtDate(container.gateInDate) %></span></div>
           <div class="detail-field"><span class="detail-label">Data de Devolução</span><span class="detail-value"><%= fmtDate(container.returnDate) %></span></div>

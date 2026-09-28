@@ -1,13 +1,58 @@
+/**
+ * Design system: an operations control panel for international
+ * trade — deep marine navy chrome around a light "chart paper"
+ * content area. Space Grotesk carries headings/labels/actions;
+ * IBM Plex Sans carries body text and data; IBM Plex Mono is
+ * reserved for real reference codes (container/booking numbers,
+ * tax IDs) — never used decoratively.
+ */
+
+:root {
+  --ink: #16213a;
+  --ink-muted: #5b6b85;
+  --brand: #1b2a4a;
+  --brand-light: #2f4771;
+  --paper: #f6f7fa;
+  --surface: #ffffff;
+  --line: #dde1e8;
+  --line-soft: #eceff3;
+  --signal-amber: #b8842e;
+  --signal-amber-bg: #faf1e1;
+  --signal-teal: #1f7a5c;
+  --signal-teal-bg: #e5f3ee;
+  --signal-brick: #a83e3e;
+  --signal-brick-bg: #f8eaea;
+  --font-display: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
-  color: #1f2937;
-  background: #f4f6f8;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 14px;
 }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+/* Real reference codes only (container/booking numbers, tax IDs) — never decorative. */
+.code {
+  font-family: var(--font-mono);
+  font-size: 0.95em;
+}
+
+/* ---------- App shell ---------- */
 
 .app-shell {
   display: flex;
@@ -15,10 +60,11 @@ body {
 }
 
 .sidebar {
-  width: 220px;
+  width: 226px;
   flex-shrink: 0;
-  background: #0c447c;
-  padding: 1rem 0;
+  background: var(--brand);
+  background-image: linear-gradient(180deg, var(--brand) 0%, #16233d 100%);
+  padding: 1.25rem 0;
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -30,21 +76,33 @@ body {
 .sidebar .brand {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 0 1rem 1.25rem;
+  gap: 10px;
+  padding: 0 1.1rem 1.5rem;
 }
 
 .sidebar .brand-mark {
   width: 22px;
   height: 22px;
-  border-radius: 6px;
-  background: #378add;
   flex-shrink: 0;
+  background:
+    linear-gradient(var(--signal-amber), var(--signal-amber)) center / 2px 100% no-repeat,
+    linear-gradient(90deg, var(--signal-amber), var(--signal-amber)) center / 100% 2px no-repeat;
+  transform: rotate(45deg);
+  position: relative;
+}
+
+.sidebar .brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 2px solid #7fa3d6;
+  border-radius: 50%;
 }
 
 .sidebar .brand-name {
   color: #fff;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 14px;
   line-height: 1.3;
 }
@@ -52,34 +110,36 @@ body {
 .sidebar nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   flex: 1;
 }
 
 .sidebar nav a {
   display: block;
-  padding: 8px 16px;
-  font-size: 14px;
-  color: #b5d4f4;
+  padding: 9px 18px;
+  font-size: 13.5px;
+  color: #a7b6d4;
   text-decoration: none;
-  border-left: 2px solid transparent;
+  border-left: 3px solid transparent;
 }
 
 .sidebar nav a:hover {
-  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar nav a.active {
   color: #fff;
-  background: #185fa5;
-  border-left-color: #85b7eb;
+  background: rgba(255, 255, 255, 0.07);
+  border-left-color: var(--signal-amber);
+  font-weight: 500;
 }
 
 .sidebar-footer {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 12px 18px;
   margin-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   text-decoration: none;
@@ -87,20 +147,21 @@ body {
 }
 
 .sidebar-footer:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .sidebar-footer .avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #378add;
-  color: #fff;
+  background: var(--signal-amber);
+  color: var(--brand);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-display);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
@@ -115,22 +176,27 @@ body {
 .content {
   flex: 1;
   min-width: 0;
-  padding: 1.5rem 2rem;
+  padding: 1.75rem 2.25rem;
   overflow-x: auto;
+  background-image:
+    linear-gradient(var(--line-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 
 .content h1 {
   margin: 0 0 1rem;
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 21px;
 }
+
+/* ---------- Tables ---------- */
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
-  border: 1px solid #e2e5e9;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
   overflow: hidden;
 }
 
@@ -139,49 +205,75 @@ body {
   text-align: left;
   padding: 10px 12px;
   font-size: 13px;
-  border-bottom: 1px solid #e2e5e9;
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .data-table th {
-  background: #f8f9fb;
-  color: #6b7280;
-  font-weight: 500;
+  background: var(--paper);
+  color: var(--ink-muted);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
 }
+
+/* ---------- Login ---------- */
 
 .login-body {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  background: var(--brand);
+  background-image: linear-gradient(160deg, var(--brand) 0%, #16233d 100%);
 }
 
 .login-card {
   width: 320px;
-  background: #fff;
-  border: 1px solid #e2e5e9;
-  border-radius: 12px;
+  background: var(--surface);
+  border-radius: 4px;
   padding: 2rem;
+  box-shadow: 0 20px 50px rgba(10, 18, 36, 0.35);
 }
 
 .login-brand {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 1.5rem;
 }
 
+.login-brand .brand-mark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  background:
+    linear-gradient(var(--signal-amber), var(--signal-amber)) center / 2px 100% no-repeat,
+    linear-gradient(90deg, var(--signal-amber), var(--signal-amber)) center / 100% 2px no-repeat;
+  transform: rotate(45deg);
+  position: relative;
+}
+
+.login-brand .brand-mark::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 2px solid var(--brand-light);
+  border-radius: 50%;
+}
+
 .login-brand .brand-name {
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-weight: 600;
   font-size: 15px;
-  color: #1f2937;
+  color: var(--ink);
 }
 
 .login-error {
-  background: #fdecea;
-  color: #b3261e;
+  background: var(--signal-brick-bg);
+  color: var(--signal-brick);
   font-size: 13px;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   margin: 0 0 1rem;
 }
 
@@ -193,34 +285,38 @@ body {
 
 .login-form label {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--ink-muted);
   margin-top: 10px;
 }
 
 .login-form input {
-  padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
   font-size: 14px;
+  font-family: inherit;
 }
 
 .login-form button,
 .logout-button {
   margin-top: 1.5rem;
   padding: 10px;
-  background: #185fa5;
+  background: var(--brand);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .login-form button:hover,
 .logout-button:hover {
-  background: #0c447c;
+  background: var(--brand-light);
 }
+
+/* ---------- Page chrome ---------- */
 
 .page-header {
   display: flex;
@@ -231,17 +327,18 @@ body {
 
 .button-link {
   display: inline-block;
-  padding: 8px 14px;
-  background: #185fa5;
+  padding: 8px 16px;
+  background: var(--brand);
   color: #fff;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-family: var(--font-display);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none;
 }
 
 .button-link:hover {
-  background: #0c447c;
+  background: var(--brand-light);
 }
 
 .filter-bar {
@@ -249,9 +346,9 @@ body {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  background: #f8f9fb;
-  border: 1px solid #e2e5e9;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
   padding: 10px 12px;
   margin-bottom: 1rem;
   position: sticky;
@@ -259,30 +356,34 @@ body {
   z-index: 5;
 }
 
-.filter-bar select {
+.filter-bar select,
+.filter-bar input[type="text"] {
   padding: 6px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
   font-size: 13px;
+  font-family: inherit;
 }
 
 .filter-bar button {
   padding: 6px 14px;
-  background: #185fa5;
+  background: var(--brand);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-family: var(--font-display);
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .filter-bar button:hover {
-  background: #0c447c;
+  background: var(--brand-light);
 }
 
 .filter-clear {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--ink-muted);
   text-decoration: none;
 }
 
@@ -290,11 +391,14 @@ body {
   text-decoration: underline;
 }
 
+/* ---------- Forms ---------- */
+
 .data-form {
   max-width: 520px;
-  background: #fff;
-  border: 1px solid #e2e5e9;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: 4px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -302,7 +406,7 @@ body {
 
 .data-form label {
   font-size: 13px;
-  color: #6b7280;
+  color: var(--ink-muted);
   margin-top: 12px;
   margin-bottom: 4px;
 }
@@ -315,8 +419,8 @@ body {
 .data-form textarea,
 .data-form select {
   padding: 8px 10px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
 }
@@ -332,20 +436,21 @@ body {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #1f2937;
+  color: var(--ink);
   margin: 0;
 }
 
 .data-form fieldset {
-  border: 1px solid #e2e5e9;
-  border-radius: 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
   margin-top: 10px;
   padding: 8px 12px;
 }
 
 .data-form fieldset legend {
-  font-size: 12px;
-  color: #6b7280;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-muted);
   padding: 0 4px;
 }
 
@@ -370,28 +475,31 @@ body {
 .data-form button {
   margin-top: 1.5rem;
   padding: 10px;
-  background: #185fa5;
+  background: var(--brand);
   color: #fff;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
+  font-family: var(--font-display);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
 }
 
 .data-form button:hover {
-  background: #0c447c;
+  background: var(--brand-light);
 }
 
 .form-error {
-  background: #fdecea;
-  color: #b3261e;
+  background: var(--signal-brick-bg);
+  color: var(--signal-brick);
   font-size: 13px;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 4px;
   margin: 0 0 1rem;
   max-width: 520px;
 }
+
+/* ---------- Row actions / links ---------- */
 
 .row-actions {
   display: flex;
@@ -401,9 +509,10 @@ body {
 }
 
 .row-actions a {
-  color: #185fa5;
+  color: var(--brand);
   font-size: 13px;
   text-decoration: none;
+  font-weight: 500;
 }
 
 .row-actions a:hover {
@@ -417,7 +526,7 @@ body {
 .link-button {
   background: none;
   border: none;
-  color: #b3261e;
+  color: var(--signal-brick);
   font-size: 13px;
   cursor: pointer;
   padding: 0;
@@ -427,38 +536,43 @@ body {
   text-decoration: underline;
 }
 
+.link-button-positive {
+  color: var(--signal-teal);
+}
+
 .muted {
-  color: #9ca3af;
+  color: var(--ink-muted);
   font-size: 13px;
 }
+
+/* ---------- Status badges ---------- */
 
 .status-badge {
   display: inline-block;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 3px;
   font-size: 12px;
   font-weight: 500;
 }
 
 .status-active {
-  background: #e6f4ea;
-  color: #1e7e34;
+  background: var(--signal-teal-bg);
+  color: var(--signal-teal);
 }
 
 .status-inactive {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: var(--line-soft);
+  color: var(--ink-muted);
 }
 
-.link-button-positive {
-  color: #1e7e34;
-}
+/* ---------- Detail pages ---------- */
 
 .detail-card {
   max-width: 900px;
-  background: #fff;
-  border: 1px solid #e2e5e9;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: 4px;
   padding: 1.25rem 1.5rem;
 }
 
@@ -478,19 +592,24 @@ body {
 }
 
 .detail-field .detail-label {
+  font-family: var(--font-mono);
   font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
-/* Places two (or more) .detail-card blocks side by side, e.g. exportStage/importStage. */
-/* Groups whole sections (a card + its table + its form) side by side, not just fields within one card. */
+/* Explicit 2-column quadrant grid — not auto-fit, so it always reads as clean pairs, using the full available width (matches .shipment-header, no artificial cap). */
+/* Multi-column masonry: unlike a grid, each column's height is
+   independent, so a short block (e.g. Checklist) never gets stuck
+   in a tall row next to a long one (e.g. Atividade) — the browser
+   balances blocks across columns by their real measured height. */
 .detail-layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-  gap: 1.5rem;
-  align-items: start;
-  max-width: 1100px;
+  column-count: 2;
+  column-gap: 1.5rem;
+}
+
+.detail-block {
+  break-inside: avoid;
+  margin: 0 0 1.5rem;
 }
 
 .detail-block h2 {
@@ -498,6 +617,20 @@ body {
   margin: 0 0 0.75rem;
 }
 
+.detail-subheading {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-muted);
+  margin: 1.25rem 0 0.6rem;
+}
+
+@media (max-width: 900px) {
+  .detail-layout {
+    column-count: 1;
+  }
+}
+
+/* Places two (or more) .detail-card blocks side by side, e.g. exportStage/importStage. */
 .detail-columns {
   display: flex;
   gap: 1rem;
@@ -512,7 +645,7 @@ body {
 }
 
 .detail-label {
-  color: #6b7280;
+  color: var(--ink-muted);
 }
 
 .detail-value {
@@ -526,6 +659,8 @@ body {
   margin-top: 1.25rem;
 }
 
+/* ---------- Activity feed ---------- */
+
 .note-list {
   display: flex;
   flex-direction: column;
@@ -536,7 +671,7 @@ body {
   display: flex;
   gap: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #f0f1f3;
+  border-bottom: 1px solid var(--line-soft);
   font-size: 14px;
 }
 
@@ -547,14 +682,14 @@ body {
 
 .note-meta {
   flex: 0 0 160px;
-  color: #6b7280;
+  color: var(--ink-muted);
   font-size: 12px;
   line-height: 1.5;
 }
 
 .note-meta strong {
   display: block;
-  color: #1f2937;
+  color: var(--ink);
   font-size: 13px;
   font-weight: 500;
 }
@@ -562,4 +697,230 @@ body {
 .note-message {
   flex: 1;
   min-width: 0;
+}
+
+/* ---------- Shipment header: identity + status timeline ---------- */
+
+.shipment-header {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.shipment-identity {
+  flex: 1 1 380px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--brand);
+  border-radius: 4px;
+  padding: 1.5rem;
+}
+
+.shipment-identity h1 {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.shipment-parties {
+  font-size: 14px;
+  color: var(--ink);
+  margin: 10px 0 0;
+}
+
+.shipment-parties .flow-arrow {
+  color: var(--ink-muted);
+  margin: 0 8px;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0 0;
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  background: var(--paper);
+}
+
+.shipment-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.shipment-meta {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--ink-muted);
+}
+
+.status-panel {
+  flex: 0 0 300px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1.25rem 1.5rem;
+}
+
+.status-panel h2 {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0 0 1.1rem;
+  color: var(--ink-muted);
+}
+
+.status-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  padding-bottom: 13px;
+}
+
+.status-step:last-child {
+  padding-bottom: 0;
+}
+
+.status-step::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 14px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--line);
+}
+
+.status-step:last-child::before {
+  display: none;
+}
+
+.status-step.is-done::before {
+  background: var(--signal-teal);
+}
+
+.status-step-marker {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-top: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  background: var(--line);
+}
+
+.status-step.is-done .status-step-marker {
+  background: var(--signal-teal);
+}
+
+.status-step.is-current .status-step-marker {
+  background: var(--brand);
+  box-shadow: 0 0 0 3px var(--signal-amber-bg);
+  outline: 2px solid var(--signal-amber);
+}
+
+.status-step-label {
+  font-size: 13px;
+  color: var(--ink-muted);
+  line-height: 1.4;
+}
+
+.status-step.is-current .status-step-label {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.status-step.is-done .status-step-label {
+  color: var(--ink);
+}
+
+/* ---------- Action zone: an interactive workspace, distinct from display panels ---------- */
+
+.action-zone {
+  background: #eef1f7;
+  border: 1px solid #d7deea;
+  border-radius: 4px;
+  padding: 1.1rem 1.4rem;
+}
+
+.action-zone .filter-bar {
+  background: var(--surface);
+}
+
+.action-zone .data-form {
+  border-left-color: var(--brand-light);
+  margin-top: 1rem;
+}
+
+/* ---------- Checklist, as a list of checks rather than a data table ---------- */
+
+.checklist-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+}
+
+.checklist-row:last-child {
+  border-bottom: none;
+}
+
+.checklist-marker {
+  width: 15px;
+  height: 15px;
+  border-radius: 3px;
+  border: 2px solid var(--line);
+  flex-shrink: 0;
+}
+
+.checklist-row.is-done .checklist-marker {
+  background: var(--signal-teal);
+  border-color: var(--signal-teal);
+}
+
+.checklist-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.checklist-row.is-done .checklist-name {
+  color: var(--ink-muted);
+  text-decoration: line-through;
+}
+
+.checklist-meta {
+  font-size: 12px;
+  color: var(--ink-muted);
+  white-space: nowrap;
 }
