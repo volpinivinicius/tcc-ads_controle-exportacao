@@ -1,0 +1,50 @@
+<%- include('partials/head', { title: 'Alocações' }) %>
+<%- include('partials/sidebar', { activePage: 'allocations' }) %>
+      <div class="page-header">
+        <h1>Alocações (Embarque &harr; Container)</h1>
+      </div>
+      <p class="muted">Para criar uma nova alocação, vá até a tela do Embarque ou do Container e use o vínculo direto por lá.</p>
+      <form method="GET" action="/allocations" class="filter-bar">
+        <select name="isActive">
+          <option value="">Ativas e inativas</option>
+          <option value="true" <%= filters.isActive === 'true' ? 'selected' : '' %>>Somente ativas</option>
+          <option value="false" <%= filters.isActive === 'false' ? 'selected' : '' %>>Somente inativas</option>
+        </select>
+        <button type="submit">Filtrar</button>
+        <a href="/allocations" class="filter-clear">Limpar</a>
+      </form>
+      <table class="data-table">
+        <thead>
+          <tr><th>Embarque</th><th>Container</th><th>Peso (kg)</th><th>Volume (m³)</th><th>Situação</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% if (allocations.length === 0) { %>
+            <tr><td colspan="6">Nenhuma alocação cadastrada ainda.</td></tr>
+          <% } %>
+          <% allocations.forEach(function(a) { %>
+            <tr>
+              <td><% if (a.shipment) { %><a href="/shipments/<%= a.shipment._id %>"><%= a.shipment.reference || a.shipment._id %></a><% } else { %>—<% } %></td>
+              <td><% if (a.container) { %><a href="/containers/<%= a.container._id %>"><%= a.container.containerNumber || a.container._id %></a><% } else { %>—<% } %></td>
+              <td><%= a.weightKg || '—' %></td>
+              <td><%= a.volumeM3 || '—' %></td>
+              <td><span class="status-badge <%= a.isActive ? 'status-active' : 'status-inactive' %>"><%= a.isActive ? 'Ativo' : 'Inativo' %></span></td>
+              <td class="row-actions">
+                <a href="/allocations/<%= a._id %>/edit">Editar</a>
+                <% if (a.isActive) { %>
+                  <form method="POST" action="/allocations/<%= a._id %>/delete" onsubmit="return confirm('Inativar esta alocação?');">
+                    <button type="submit" class="link-button">Inativar</button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/allocations/<%= a._id %>/reactivate">
+                    <button type="submit" class="link-button link-button-positive">Reativar</button>
+                  </form>
+                <% } %>
+                <form method="POST" action="/allocations/<%= a._id %>/hard-delete" onsubmit="return confirm('Excluir esta alocação DEFINITIVAMENTE? Essa ação não pode ser desfeita.');">
+                  <button type="submit" class="link-button">Excluir definitivamente</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+<%- include('partials/footer') %>

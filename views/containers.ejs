@@ -1,0 +1,58 @@
+<%- include('partials/head', { title: 'Containers' }) %>
+<%- include('partials/sidebar', { activePage: 'containers' }) %>
+      <div class="page-header">
+        <h1>Containers</h1>
+        <a href="/containers/new" class="button-link">+ Novo Container</a>
+      </div>
+      <form method="GET" action="/containers" class="filter-bar">
+        <select name="booking">
+          <option value="">Todos os bookings</option>
+          <% bookings.forEach(function(b) { %>
+            <option value="<%= b._id %>" <%= filters.booking === String(b._id) ? 'selected' : '' %>><%= b.bookingNumber %></option>
+          <% }); %>
+        </select>
+        <select name="isActive">
+          <option value="">Ativos e inativos</option>
+          <option value="true" <%= filters.isActive === 'true' ? 'selected' : '' %>>Somente ativos</option>
+          <option value="false" <%= filters.isActive === 'false' ? 'selected' : '' %>>Somente inativos</option>
+        </select>
+        <button type="submit">Filtrar</button>
+        <a href="/containers" class="filter-clear">Limpar</a>
+      </form>
+      <table class="data-table">
+        <thead>
+          <tr><th>Nº Container</th><th>Booking</th><th>Tamanho</th><th>Retirada</th><th>Gate-in</th><th>Devolução</th><th>Situação</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% if (containers.length === 0) { %>
+            <tr><td colspan="8">Nenhum container cadastrado ainda.</td></tr>
+          <% } %>
+          <% containers.forEach(function(c) { %>
+            <tr>
+              <td><a href="/containers/<%= c._id %>"><%= c.containerNumber || '— (a definir)' %></a></td>
+              <td><% if (c.booking) { %><a href="/bookings/<%= c.booking._id %>"><%= c.booking.bookingNumber %></a><% } else { %>—<% } %></td>
+              <td><%= c.size %></td>
+              <td><%= c.emptyPickupDate ? new Date(c.emptyPickupDate).toLocaleDateString('pt-BR') : '—' %></td>
+              <td><%= c.gateInDate ? new Date(c.gateInDate).toLocaleDateString('pt-BR') : '—' %></td>
+              <td><%= c.returnDate ? new Date(c.returnDate).toLocaleDateString('pt-BR') : '—' %></td>
+              <td><span class="status-badge <%= c.isActive ? 'status-active' : 'status-inactive' %>"><%= c.isActive ? 'Ativo' : 'Inativo' %></span></td>
+              <td class="row-actions">
+                <a href="/containers/<%= c._id %>/edit">Editar</a>
+                <% if (c.isActive) { %>
+                  <form method="POST" action="/containers/<%= c._id %>/delete" onsubmit="return confirm('Inativar este container?');">
+                    <button type="submit" class="link-button">Inativar</button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/containers/<%= c._id %>/reactivate">
+                    <button type="submit" class="link-button link-button-positive">Reativar</button>
+                  </form>
+                <% } %>
+                <form method="POST" action="/containers/<%= c._id %>/hard-delete" onsubmit="return confirm('Excluir este container DEFINITIVAMENTE? Essa ação não pode ser desfeita e requer permissão de System Administrator.');">
+                  <button type="submit" class="link-button">Excluir definitivamente</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+<%- include('partials/footer') %>

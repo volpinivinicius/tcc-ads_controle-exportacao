@@ -1,21 +1,30 @@
+const mongoose = require("mongoose");
+
 /**
- * Container Schema
- *
- * Represents a physical container linked to a Booking. A Booking
- * can have several Containers, all sharing the Booking's
- * deadlines.
- *
- * The containerNumber is not required at creation: a Container
- * is initially registered with only its requested size/type,
- * reflecting that a Booking is made for a quantity of containers
- * before the physical units are picked up from the depot. The
- * containerNumber is filled in progressively as each container
- * is retrieved, often by the logistics operator or carrier
- * responsible for that pickup.
- *
- * Unlike deadlines, which live on the Booking, a Container
- * records its own realized operational dates (such as empty
- * pickup, gate-in at origin, and return at destination), since
- * containers under the same Booking are handled individually and
- * reach each milestone at different times.
+ * BASIC version — see the model's original design comment.
+ * Authorization is SYSTEM-only for now, same reasoning as
+ * Booking: the ASSIGNED_SHIPMENT delegation described in the
+ * original design (a carrier's user updating the
+ * containerNumber/realized dates for containers allocated to
+ * their assigned Shipments) depends on
+ * ShipmentContainerAllocation, a future increment. Revisit
+ * CONTAINER_UPDATE's authorization once that exists.
  */
+const containerSchema = new mongoose.Schema(
+  {
+    booking: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Booking",
+      required: true,
+    },
+    size: { type: String, enum: ["20FT", "40FT", "40HC"], required: true },
+    containerNumber: { type: String, trim: true, unique: true, sparse: true },
+    emptyPickupDate: { type: Date },
+    gateInDate: { type: Date },
+    returnDate: { type: Date },
+    isActive: { type: Boolean, required: true, default: true },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Container", containerSchema);

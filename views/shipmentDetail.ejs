@@ -64,9 +64,52 @@
         </form>
       </div>
 
+      <h2 style="font-size: 15px; margin-top: 1.5rem;">Containers alocados</h2>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <table class="data-table">
+        <thead>
+          <tr><th>Container</th><th>Tamanho</th><th>Peso (kg)</th><th>Volume (m³)</th></tr>
+        </thead>
+        <tbody>
+          <% if (allocations.length === 0) { %>
+            <tr><td colspan="4">Nenhum container alocado a este embarque ainda.</td></tr>
+          <% } %>
+          <% allocations.forEach(function(a) { %>
+            <tr>
+              <td><% if (a.container) { %><a href="/containers/<%= a.container._id %>"><%= a.container.containerNumber || a.container._id %></a><% } else { %>—<% } %></td>
+              <td><%= a.container && a.container.size ? a.container.size : '—' %></td>
+              <td><%= a.weightKg || '—' %></td>
+              <td><%= a.volumeM3 || '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+
+      <h2 style="font-size: 15px; margin-top: 1.5rem;">Alocar um container</h2>
+      <% if (availableContainers.length === 0) { %>
+        <p class="muted">Nenhum container disponível para alocar (todos já estão vinculados a este embarque, ou nenhum foi cadastrado ainda).</p>
+      <% } else { %>
+        <form method="POST" action="/shipments/<%= shipment._id %>/allocate-container" class="data-form">
+          <label>Container</label>
+          <select name="container" required>
+            <option value="">Selecione...</option>
+            <% availableContainers.forEach(function(c) { %>
+              <option value="<%= c._id %>"><%= c.containerNumber || c._id %> (<%= c.size %>)</option>
+            <% }); %>
+          </select>
+
+          <label>Peso em kg (opcional)</label>
+          <input type="number" name="weightKg" min="0" step="0.01" />
+
+          <label>Volume em m³ (opcional)</label>
+          <input type="number" name="volumeM3" min="0" step="0.01" />
+
+          <button type="submit">Alocar</button>
+        </form>
+      <% } %>
+
       <!--
-        Próximas partes (Booking, Container, checklist de documentos,
-        feed de notas) vão ganhar suas próprias seções aqui, cada
-        uma na sua vez.
+        Próximas partes (checklist de documentos, feed de notas)
+        vão ganhar suas próprias seções aqui, cada uma na sua vez.
       -->
 <%- include('partials/footer') %>

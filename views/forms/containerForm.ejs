@@ -1,0 +1,42 @@
+<%
+function toDateInput(d) {
+  if (!d) return '';
+  return new Date(d).toISOString().slice(0, 10);
+}
+%>
+<%- include('../partials/head', { title: title }) %>
+<%- include('../partials/sidebar', { activePage: 'containers' }) %>
+      <h1><%= title %></h1>
+      <% if (error) { %><p class="form-error"><%= error %></p><% } %>
+      <form method="POST" action="<%= container && container._id ? '/containers/' + container._id : '/containers' %>" class="data-form">
+        <label>Booking</label>
+        <select name="booking" required>
+          <option value="">Selecione...</option>
+          <% bookings.forEach(function(b) { %>
+            <option value="<%= b._id %>" <%= container && String(container.booking) === String(b._id) ? 'selected' : '' %>><%= b.bookingNumber %></option>
+          <% }); %>
+        </select>
+
+        <label>Tamanho</label>
+        <select name="size" required>
+          <option value="">Selecione...</option>
+          <% ['20FT', '40FT', '40HC'].forEach(function(s) { %>
+            <option value="<%= s %>" <%= container && container.size === s ? 'selected' : '' %>><%= s %></option>
+          <% }); %>
+        </select>
+
+        <label>Nº do Container (opcional — preenchido quando for retirado)</label>
+        <input type="text" name="containerNumber" value="<%= container ? (container.containerNumber || '') : '' %>" />
+
+        <label>Data de Retirada Vazio (opcional)</label>
+        <input type="date" name="emptyPickupDate" value="<%= container ? toDateInput(container.emptyPickupDate) : '' %>" />
+
+        <label>Data de Gate-in (opcional)</label>
+        <input type="date" name="gateInDate" value="<%= container ? toDateInput(container.gateInDate) : '' %>" />
+
+        <label>Data de Devolução (opcional)</label>
+        <input type="date" name="returnDate" value="<%= container ? toDateInput(container.returnDate) : '' %>" />
+
+        <button type="submit"><%= container && container._id ? 'Salvar' : 'Criar' %></button>
+      </form>
+<%- include('../partials/footer') %>

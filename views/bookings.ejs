@@ -1,0 +1,52 @@
+<%- include('partials/head', { title: 'Bookings' }) %>
+<%- include('partials/sidebar', { activePage: 'bookings' }) %>
+      <div class="page-header">
+        <h1>Bookings</h1>
+        <a href="/bookings/new" class="button-link">+ Novo Booking</a>
+      </div>
+      <form method="GET" action="/bookings" class="filter-bar">
+        <input type="text" name="carrier" placeholder="Armador" value="<%= filters.carrier || '' %>" />
+        <select name="isActive">
+          <option value="">Ativos e inativos</option>
+          <option value="true" <%= filters.isActive === 'true' ? 'selected' : '' %>>Somente ativos</option>
+          <option value="false" <%= filters.isActive === 'false' ? 'selected' : '' %>>Somente inativos</option>
+        </select>
+        <button type="submit">Filtrar</button>
+        <a href="/bookings" class="filter-clear">Limpar</a>
+      </form>
+      <table class="data-table">
+        <thead>
+          <tr><th>Nº Booking</th><th>Armador</th><th>Navio/Viagem</th><th>Origem &rarr; Destino</th><th>Containers solicitados</th><th>Situação</th><th>Ações</th></tr>
+        </thead>
+        <tbody>
+          <% if (bookings.length === 0) { %>
+            <tr><td colspan="7">Nenhum booking cadastrado ainda.</td></tr>
+          <% } %>
+          <% bookings.forEach(function(b) { %>
+            <tr>
+              <td><a href="/bookings/<%= b._id %>"><%= b.bookingNumber %></a></td>
+              <td><%= b.carrier %></td>
+              <td><%= b.vessel || '—' %><%= b.voyage ? ' / ' + b.voyage : '' %></td>
+              <td><%= b.portOfLoading %> &rarr; <%= b.portOfDischarge %></td>
+              <td><%= b.requestedContainers.map(function(c) { return c.quantity + 'x' + c.size; }).join(', ') %></td>
+              <td><span class="status-badge <%= b.isActive ? 'status-active' : 'status-inactive' %>"><%= b.isActive ? 'Ativo' : 'Inativo' %></span></td>
+              <td class="row-actions">
+                <a href="/bookings/<%= b._id %>/edit">Editar</a>
+                <% if (b.isActive) { %>
+                  <form method="POST" action="/bookings/<%= b._id %>/delete" onsubmit="return confirm('Inativar este booking?');">
+                    <button type="submit" class="link-button">Inativar</button>
+                  </form>
+                <% } else { %>
+                  <form method="POST" action="/bookings/<%= b._id %>/reactivate">
+                    <button type="submit" class="link-button link-button-positive">Reativar</button>
+                  </form>
+                <% } %>
+                <form method="POST" action="/bookings/<%= b._id %>/hard-delete" onsubmit="return confirm('Excluir este booking DEFINITIVAMENTE? Essa ação não pode ser desfeita e requer permissão de System Administrator.');">
+                  <button type="submit" class="link-button">Excluir definitivamente</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+<%- include('partials/footer') %>
