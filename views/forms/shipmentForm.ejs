@@ -33,7 +33,7 @@
         <label>Incoterm (opcional)</label>
         <select name="incoterm">
           <option value="">—</option>
-          <% ['EXW', 'FCA', 'FAS', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DPU', 'DDP'].forEach(function(i) { %>
+          <% ['EXW', 'FCA', 'FOB', 'CFR', 'CIF', 'CPT', 'CIP', 'DAP', 'DDP'].forEach(function(i) { %>
             <option value="<%= i %>" <%= shipment && shipment.incoterm === i ? 'selected' : '' %>><%= i %></option>
           <% }); %>
         </select>

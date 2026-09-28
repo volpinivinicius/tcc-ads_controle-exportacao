@@ -47,6 +47,24 @@ flowchart TD
     B -.->|deadline change generates| SN
 ```
 
+### Modal, status, and stages
+
+A shipment carries a modal field (MARITIME, AIR, ROAD, or OTHER), identifying its transport mode. Only MARITIME shipments may be linked to a Booking; a shipment with any other modal must not have one. Whether a MARITIME shipment is still waiting on its Booking is not tracked as a status value, but derived from whether a Booking has been linked to it yet: the absence of a linked Booking is itself the signal.
+
+The shipment's lifecycle is tracked through a status field. In this first version, status changes are always made manually by a user for every value in the sequence below; the system does not transition status automatically based on other events (such as a linked Booking, a completed checklist item, or the cargo's collection/loading being recorded elsewhere). Those events may inform the user of what to do next, but the status change itself is a deliberate user action:
+
+0 NEW: the shipment has just been opened.
+1 AWAITING_INVOICE_RELEASE / 2 PARTIALLY_INVOICED: these two can alternate back and forth, since cargo may become available and get invoiced in more than one batch over time; the shipment moves on only once invoicing is complete.
+3 AWAITING_COLLECTION_OR_SHIPPING: reached once invoicing is complete. Its meaning depends on modal: for ROAD or AIR shipments it means awaiting cargo collection; for MARITIME shipments it means awaiting loading onto the vessel. It is a single shared status value regardless of modal.
+4 SHIPPED: the cargo has been collected/loaded.
+5 AWAITING_DOCUMENT_ISSUANCE: optional; used only when some required document is still pending after the shipment has occurred. If every required document was already issued before shipping, this status is skipped.
+6 AWAITING_OWNERSHIP_TRANSFER: tracks the transfer of ownership as defined by the shipment's Incoterm; its duration depends on that Incoterm (for example, under DDP, ownership only transfers upon final delivery to the buyer).
+7 CLOSED: the process is complete and ownership has transferred.
+
+For processes that involve two distinct operational fronts, such as an INTERCOMPANY process handled by separate teams in the origin and destination countries, the shipment carries two optional subdocuments, exportStage and importStage. Each stage holds the fields relevant to its side of the process independently, including the assigned carrier, the assigned warehouse, status, and dates — this is what allows, for instance, the export team in Brazil and the import team in the United States to operate on the same shipment record while each managing only their own stage, including cases where the carrier used on the export leg differs from the one used on the import leg. A plain EXPORT shipment populates only exportStage; a plain IMPORT shipment populates only importStage; only INTERCOMPANY typically populates both.
+
+A stage's carrierCompany/warehouseCompany is also what an ASSIGNED_SHIPMENT Access Role resolves against: a Company assigned as carrier or warehouse on a shipment's exportStage gains visibility into that stage alone, never the importStage of the same shipment, even when both stages belong to the same INTERCOMPANY process. See > Authorization and Access Control Architecture for the general scope rules.
+
 ### Booking and Container
 
 A Booking is the reservation made with an ocean carrier, identified by a single booking number. It carries the vessel, voyage, ports, estimated dates, and deadlines, such as cargo cutoff and document cutoff. These deadlines apply uniformly to every Container linked to that Booking; they are not duplicated per container.
