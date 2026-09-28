@@ -310,11 +310,15 @@ body {
 .data-form input[type="text"],
 .data-form input[type="email"],
 .data-form input[type="password"],
+.data-form input[type="number"],
+.data-form input[type="date"],
+.data-form textarea,
 .data-form select {
   padding: 8px 10px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
+  font-family: inherit;
 }
 
 .checkbox-group {
@@ -451,24 +455,60 @@ body {
 }
 
 .detail-card {
-  max-width: 640px;
+  max-width: 900px;
   background: #fff;
   border: 1px solid #e2e5e9;
   border-radius: 8px;
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 1.5rem;
 }
 
-.detail-row {
+/* Lays fields out side by side, wrapping to fewer columns on narrower screens. */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px 28px;
+}
+
+.detail-field {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f1f3;
+  flex-direction: column;
+  gap: 3px;
   font-size: 14px;
+  min-width: 0;
 }
 
-.detail-row:last-child {
-  border-bottom: none;
+.detail-field .detail-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Places two (or more) .detail-card blocks side by side, e.g. exportStage/importStage. */
+/* Groups whole sections (a card + its table + its form) side by side, not just fields within one card. */
+.detail-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.5rem;
+  align-items: start;
+  max-width: 1100px;
+}
+
+.detail-block h2 {
+  font-size: 15px;
+  margin: 0 0 0.75rem;
+}
+
+.detail-columns {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 900px;
+}
+
+.detail-columns > .detail-card {
+  flex: 1;
+  min-width: 300px;
+  max-width: none;
 }
 
 .detail-label {
@@ -477,7 +517,6 @@ body {
 
 .detail-value {
   font-weight: 500;
-  text-align: right;
 }
 
 .detail-actions {
@@ -485,4 +524,42 @@ body {
   align-items: center;
   gap: 14px;
   margin-top: 1.25rem;
+}
+
+.note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.note-item {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f1f3;
+  font-size: 14px;
+}
+
+.note-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.note-meta {
+  flex: 0 0 160px;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.note-meta strong {
+  display: block;
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.note-message {
+  flex: 1;
+  min-width: 0;
 }

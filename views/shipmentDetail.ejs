@@ -6,45 +6,17 @@
       </div>
 
       <div class="detail-card">
-        <div class="detail-row">
-          <span class="detail-label">Referência</span>
-          <span class="detail-value"><%= shipment.reference || '—' %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Empresa Exportadora</span>
-          <span class="detail-value"><%= shipment.exporterCompany ? shipment.exporterCompany.name : '—' %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Empresa Importadora</span>
-          <span class="detail-value"><%= shipment.importerCompany ? shipment.importerCompany.name : '—' %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Modal</span>
-          <span class="detail-value"><%= shipment.modal %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Classificação</span>
-          <span class="detail-value"><%= shipment.processType %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Status</span>
-          <span class="detail-value"><%= shipment.status %> - <%= statusLabels[shipment.status] %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Incoterm</span>
-          <span class="detail-value"><%= shipment.incoterm || '—' %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Situação</span>
-          <span class="detail-value"><span class="status-badge <%= shipment.isActive ? 'status-active' : 'status-inactive' %>"><%= shipment.isActive ? 'Ativo' : 'Cancelado' %></span></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Criado em</span>
-          <span class="detail-value"><%= new Date(shipment.createdAt).toLocaleString('pt-BR') %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Última atualização</span>
-          <span class="detail-value"><%= new Date(shipment.updatedAt).toLocaleString('pt-BR') %></span>
+        <div class="detail-grid">
+          <div class="detail-field"><span class="detail-label">Referência</span><span class="detail-value"><%= shipment.reference || '—' %></span></div>
+          <div class="detail-field"><span class="detail-label">Empresa Exportadora</span><span class="detail-value"><%= shipment.exporterCompany ? shipment.exporterCompany.name : '—' %></span></div>
+          <div class="detail-field"><span class="detail-label">Empresa Importadora</span><span class="detail-value"><%= shipment.importerCompany ? shipment.importerCompany.name : '—' %></span></div>
+          <div class="detail-field"><span class="detail-label">Modal</span><span class="detail-value"><%= shipment.modal %></span></div>
+          <div class="detail-field"><span class="detail-label">Classificação</span><span class="detail-value"><%= shipment.processType %></span></div>
+          <div class="detail-field"><span class="detail-label">Status</span><span class="detail-value"><%= shipment.status %> - <%= statusLabels[shipment.status] %></span></div>
+          <div class="detail-field"><span class="detail-label">Incoterm</span><span class="detail-value"><%= shipment.incoterm || '—' %></span></div>
+          <div class="detail-field"><span class="detail-label">Situação</span><span class="detail-value"><span class="status-badge <%= shipment.isActive ? 'status-active' : 'status-inactive' %>"><%= shipment.isActive ? 'Ativo' : 'Cancelado' %></span></span></div>
+          <div class="detail-field"><span class="detail-label">Criado em</span><span class="detail-value"><%= new Date(shipment.createdAt).toLocaleString('pt-BR') %></span></div>
+          <div class="detail-field"><span class="detail-label">Última atualização</span><span class="detail-value"><%= new Date(shipment.updatedAt).toLocaleString('pt-BR') %></span></div>
         </div>
       </div>
 
@@ -64,52 +36,159 @@
         </form>
       </div>
 
-      <h2 style="font-size: 15px; margin-top: 1.5rem;">Containers alocados</h2>
       <% if (error) { %><p class="form-error"><%= error %></p><% } %>
-      <table class="data-table">
-        <thead>
-          <tr><th>Container</th><th>Tamanho</th><th>Peso (kg)</th><th>Volume (m³)</th></tr>
-        </thead>
-        <tbody>
-          <% if (allocations.length === 0) { %>
-            <tr><td colspan="4">Nenhum container alocado a este embarque ainda.</td></tr>
+
+      <div class="detail-layout" style="margin-top: 1.5rem;">
+        <% if (shipment.exportStage || shipment.importStage) { %>
+          <div class="detail-block">
+            <h2>Estágios do Processo</h2>
+            <div class="detail-columns">
+              <% if (shipment.exportStage) { %>
+                <div class="detail-card">
+                  <p class="muted" style="margin: 0 0 10px;">Exportação</p>
+                  <div class="detail-grid">
+                    <div class="detail-field"><span class="detail-label">Transportadora</span><span class="detail-value"><%= shipment.exportStage.carrierCompany ? shipment.exportStage.carrierCompany.name : '—' %></span></div>
+                    <div class="detail-field"><span class="detail-label">Armazém</span><span class="detail-value"><%= shipment.exportStage.warehouseCompany ? shipment.exportStage.warehouseCompany.name : '—' %></span></div>
+                    <div class="detail-field"><span class="detail-label">Status</span><span class="detail-value"><%= shipment.exportStage.status !== undefined && shipment.exportStage.status !== null ? (shipment.exportStage.status + ' - ' + statusLabels[shipment.exportStage.status]) : '—' %></span></div>
+                  </div>
+                </div>
+              <% } %>
+              <% if (shipment.importStage) { %>
+                <div class="detail-card">
+                  <p class="muted" style="margin: 0 0 10px;">Importação</p>
+                  <div class="detail-grid">
+                    <div class="detail-field"><span class="detail-label">Transportadora</span><span class="detail-value"><%= shipment.importStage.carrierCompany ? shipment.importStage.carrierCompany.name : '—' %></span></div>
+                    <div class="detail-field"><span class="detail-label">Armazém</span><span class="detail-value"><%= shipment.importStage.warehouseCompany ? shipment.importStage.warehouseCompany.name : '—' %></span></div>
+                    <div class="detail-field"><span class="detail-label">Status</span><span class="detail-value"><%= shipment.importStage.status !== undefined && shipment.importStage.status !== null ? (shipment.importStage.status + ' - ' + statusLabels[shipment.importStage.status]) : '—' %></span></div>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+
+        <div class="detail-block">
+          <h2>Containers Alocados</h2>
+          <table class="data-table">
+            <thead>
+              <tr><th>Container</th><th>Booking</th><th>Tamanho</th><th>Peso (kg)</th><th>Volume (m³)</th><th>Ações</th></tr>
+            </thead>
+            <tbody>
+              <% if (allocations.length === 0) { %>
+                <tr><td colspan="6">Nenhum container alocado a este embarque ainda.</td></tr>
+              <% } %>
+              <% allocations.forEach(function(a) { %>
+                <tr>
+                  <td><% if (a.container) { %><a href="/containers/<%= a.container._id %>"><%= a.container.containerNumber || a.container._id %></a><% } else { %>—<% } %></td>
+                  <td><% if (a.container && a.container.booking) { %><a href="/bookings/<%= a.container.booking._id %>"><%= a.container.booking.bookingNumber %></a><% } else { %>—<% } %></td>
+                  <td><%= a.container && a.container.size ? a.container.size : '—' %></td>
+                  <td><%= a.weightKg || '—' %></td>
+                  <td><%= a.volumeM3 || '—' %></td>
+                  <td>
+                    <form method="POST" action="/shipments/<%= shipment._id %>/allocations/<%= a._id %>/remove" onsubmit="return confirm('Remover este container deste embarque? Essa ação não pode ser desfeita — o histórico fica registrado como uma nota abaixo.');">
+                      <button type="submit" class="link-button">Remover</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="detail-block">
+          <h2>Alocar Containers de um Booking</h2>
+          <form method="GET" action="/shipments/<%= shipment._id %>" class="filter-bar" style="position: static;">
+            <select name="booking">
+              <option value="">Selecione um booking...</option>
+              <% bookings.forEach(function(b) { %>
+                <option value="<%= b._id %>" <%= selectedBookingId === String(b._id) ? 'selected' : '' %>><%= b.bookingNumber %><%= b.carrier ? ' - ' + b.carrier : '' %></option>
+              <% }); %>
+            </select>
+            <button type="submit">Ver containers deste booking</button>
+          </form>
+
+          <% if (selectedBookingId) { %>
+            <% if (bookingContainers.length === 0) { %>
+              <p class="muted">Todos os containers deste booking já estão alocados a este embarque, ou o booking não tem containers cadastrados ainda.</p>
+            <% } else { %>
+              <form method="POST" action="/shipments/<%= shipment._id %>/allocate-containers" class="data-form">
+                <input type="hidden" name="booking" value="<%= selectedBookingId %>" />
+                <label>Marque os containers que fazem parte deste embarque (todos ou só alguns):</label>
+                <% bookingContainers.forEach(function(c) { %>
+                  <label style="font-weight: normal; display: flex; align-items: center; gap: 8px; margin-top: 6px;">
+                    <input type="checkbox" name="containers" value="<%= c._id %>" style="width: auto;" />
+                    <%= c.containerNumber || '(número a definir)' %> — <%= c.size %>
+                  </label>
+                <% }); %>
+                <button type="submit">Alocar selecionados</button>
+              </form>
+            <% } %>
           <% } %>
-          <% allocations.forEach(function(a) { %>
-            <tr>
-              <td><% if (a.container) { %><a href="/containers/<%= a.container._id %>"><%= a.container.containerNumber || a.container._id %></a><% } else { %>—<% } %></td>
-              <td><%= a.container && a.container.size ? a.container.size : '—' %></td>
-              <td><%= a.weightKg || '—' %></td>
-              <td><%= a.volumeM3 || '—' %></td>
-            </tr>
+        </div>
+
+        <div class="detail-block">
+          <h2>Checklist de Documentos</h2>
+          <table class="data-table">
+            <thead>
+              <tr><th>Documento</th><th>Status</th><th>Concluído por</th><th>Ações</th></tr>
+            </thead>
+            <tbody>
+              <% if (checklistItems.length === 0) { %>
+                <tr><td colspan="4">Nenhum documento cadastrado ainda.</td></tr>
+              <% } %>
+              <% checklistItems.forEach(function(item) { %>
+                <tr>
+                  <td><%= item.documentName %></td>
+                  <td><span class="status-badge <%= item.status === 'COMPLETED' ? 'status-active' : 'status-inactive' %>"><%= item.status === 'COMPLETED' ? 'Concluído' : 'Pendente' %></span></td>
+                  <td><%= item.completedBy ? item.completedBy.name : '—' %></td>
+                  <td class="row-actions">
+                    <% if (item.status === 'PENDING') { %>
+                      <form method="POST" action="/shipments/<%= shipment._id %>/checklist-items/<%= item._id %>/complete">
+                        <button type="submit" class="link-button link-button-positive">Concluir</button>
+                      </form>
+                    <% } %>
+                    <form method="POST" action="/shipments/<%= shipment._id %>/checklist-items/<%= item._id %>/delete" onsubmit="return confirm('Remover este item do checklist?');">
+                      <button type="submit" class="link-button">Remover</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+          <form method="POST" action="/shipments/<%= shipment._id %>/checklist-items" class="data-form">
+            <label>Novo documento exigido</label>
+            <input type="text" name="documentName" placeholder="Ex: Bill of Lading, Certificado de Origem..." required />
+            <button type="submit">Adicionar</button>
+          </form>
+        </div>
+      </div>
+
+      <h2 style="font-size: 15px; margin-top: 1.5rem;">Atividade do Embarque</h2>
+      <div class="detail-card">
+        <div class="note-list">
+          <% if (notes.length === 0) { %>
+            <p class="muted">Nenhuma atividade registrada ainda.</p>
+          <% } %>
+          <% notes.forEach(function(note) { %>
+            <div class="note-item">
+              <div class="note-meta">
+                <strong><%= note.type === 'SYSTEM' ? 'Sistema' : (note.author ? note.author.name : 'Usuário') %></strong>
+                <%= new Date(note.createdAt).toLocaleString('pt-BR') %>
+                <% if (note.visibility === 'PRIVATE') { %><br/>(privada)<% } %>
+              </div>
+              <div class="note-message"><%= note.message %></div>
+            </div>
           <% }); %>
-        </tbody>
-      </table>
-
-      <h2 style="font-size: 15px; margin-top: 1.5rem;">Alocar um container</h2>
-      <% if (availableContainers.length === 0) { %>
-        <p class="muted">Nenhum container disponível para alocar (todos já estão vinculados a este embarque, ou nenhum foi cadastrado ainda).</p>
-      <% } else { %>
-        <form method="POST" action="/shipments/<%= shipment._id %>/allocate-container" class="data-form">
-          <label>Container</label>
-          <select name="container" required>
-            <option value="">Selecione...</option>
-            <% availableContainers.forEach(function(c) { %>
-              <option value="<%= c._id %>"><%= c.containerNumber || c._id %> (<%= c.size %>)</option>
-            <% }); %>
-          </select>
-
-          <label>Peso em kg (opcional)</label>
-          <input type="number" name="weightKg" min="0" step="0.01" />
-
-          <label>Volume em m³ (opcional)</label>
-          <input type="number" name="volumeM3" min="0" step="0.01" />
-
-          <button type="submit">Alocar</button>
-        </form>
-      <% } %>
-
-      <!--
-        Próximas partes (checklist de documentos, feed de notas)
-        vão ganhar suas próprias seções aqui, cada uma na sua vez.
-      -->
+        </div>
+      </div>
+      <form method="POST" action="/shipments/<%= shipment._id %>/notes" class="data-form">
+        <label>Nova nota</label>
+        <textarea name="message" rows="3" required></textarea>
+        <label>Visibilidade</label>
+        <select name="visibility">
+          <option value="PUBLIC">Pública</option>
+          <option value="PRIVATE">Privada (oculta de transportadoras/armazéns)</option>
+        </select>
+        <button type="submit">Adicionar nota</button>
+      </form>
 <%- include('partials/footer') %>

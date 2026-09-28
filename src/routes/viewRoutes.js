@@ -8,6 +8,8 @@ const shipmentService = require("../services/shipmentService");
 const bookingService = require("../services/bookingService");
 const containerService = require("../services/containerService");
 const allocationService = require("../services/shipmentContainerAllocationService");
+const checklistItemService = require("../services/shipmentChecklistItemService");
+const shipmentNoteService = require("../services/shipmentNoteService");
 
 const router = express.Router();
 const LINK_SLOTS = 3; // fixed number of company/accessRole rows on the User form (no client-side JS yet)
@@ -46,6 +48,18 @@ function parseRequestedContainers(raw) {
   return list
     .filter((c) => c && c.size && c.quantity)
     .map((c) => ({ size: c.size, quantity: Number(c.quantity) }));
+}
+
+/** Builds a Shipment exportStage/importStage object from the form's bracketed fields, or undefined if all left blank. */
+function parseStage(raw) {
+  if (!raw) return undefined;
+  const stage = {};
+  if (raw.carrierCompany) stage.carrierCompany = raw.carrierCompany;
+  if (raw.warehouseCompany) stage.warehouseCompany = raw.warehouseCompany;
+  if (raw.status !== undefined && raw.status !== "") stage.status = Number(raw.status);
+  if (raw.plannedDate) stage.plannedDate = raw.plannedDate;
+  if (raw.actualDate) stage.actualDate = raw.actualDate;
+  return Object.keys(stage).length > 0 ? stage : undefined;
 }
 
 function groupByResource(permissions) {
@@ -605,6 +619,8 @@ router.post("/shipments", async (req, res) => {
         importerCompany: req.body.importerCompany,
         modal: req.body.modal,
         incoterm: req.body.incoterm || undefined,
+        exportStage: parseStage(req.body.exportStage),
+        importStage: parseStage(req.body.importStage),
       },
       req.user
     );
@@ -625,18 +641,31 @@ router.get("/shipments/:id", async (req, res, next) => {
   try {
     const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
     const allocations = await allocationService.listAllocations(req.user, { shipment: req.params.id });
-    const allContainers = await containerService.listContainers(req.user, { isActive: "true" });
     const allocatedContainerIds = new Set(
       allocations.map((a) => String(a.container?._id || a.container))
     );
-    const availableContainers = allContainers.filter(
-      (c) => !allocatedContainerIds.has(String(c._id))
-    );
+
+    const bookings = await bookingService.listBookingsForSelection();
+
+    let selectedBookingId = req.query.booking || null;
+    let bookingContainers = [];
+    if (selectedBookingId) {
+      const containers = await containerService.listContainersForBooking(selectedBookingId);
+      bookingContainers = containers.filter((c) => !allocatedContainerIds.has(String(c._id)));
+    }
+
+    const checklistItems = await checklistItemService.listChecklistItems(req.params.id, req.user);
+    const notes = await shipmentNoteService.listNotes(req.params.id, req.user);
+
     res.render("shipmentDetail", {
       title: "Embarque " + (shipment.reference || shipment._id),
       shipment,
       allocations,
-      availableContainers,
+      bookings,
+      selectedBookingId,
+      bookingContainers,
+      checklistItems,
+      notes,
       statusLabels: SHIPMENT_STATUS_LABELS,
       error: null,
     });
@@ -645,40 +674,108 @@ router.get("/shipments/:id", async (req, res, next) => {
   }
 });
 
-router.post("/shipments/:id/allocate-container", async (req, res, next) => {
+router.post("/shipments/:id/allocations/:allocationId/remove", async (req, res, next) => {
   try {
-    await allocationService.createAllocation(
-      {
-        shipment: req.params.id,
-        container: req.body.container,
-        weightKg: req.body.weightKg || undefined,
-        volumeM3: req.body.volumeM3 || undefined,
-      },
-      req.user
-    );
+    await allocationService.removeAllocation(req.params.allocationId, req.user);
+    res.redirect("/shipments/" + req.params.id);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/allocate-containers", async (req, res, next) => {
+  try {
+    const containerIds = req.body.containers
+      ? (Array.isArray(req.body.containers) ? req.body.containers : [req.body.containers])
+      : [];
+
+    for (const containerId of containerIds) {
+      await allocationService.createAllocation(
+        { shipment: req.params.id, container: containerId },
+        req.user
+      );
+    }
     res.redirect("/shipments/" + req.params.id);
   } catch (error) {
     try {
       const shipment = await shipmentService.getShipmentById(req.params.id, req.user);
       const allocations = await allocationService.listAllocations(req.user, { shipment: req.params.id });
-      const allContainers = await containerService.listContainers(req.user, { isActive: "true" });
       const allocatedContainerIds = new Set(
         allocations.map((a) => String(a.container?._id || a.container))
       );
-      const availableContainers = allContainers.filter(
-        (c) => !allocatedContainerIds.has(String(c._id))
-      );
+
+      const bookings = await bookingService.listBookingsForSelection();
+      const selectedBookingId = req.body.booking || null;
+      let bookingContainers = [];
+      if (selectedBookingId) {
+        const containers = await containerService.listContainersForBooking(selectedBookingId);
+        bookingContainers = containers.filter((c) => !allocatedContainerIds.has(String(c._id)));
+      }
+
+      const checklistItems = await checklistItemService.listChecklistItems(req.params.id, req.user);
+      const notes = await shipmentNoteService.listNotes(req.params.id, req.user);
+
       res.status(error.status || 500).render("shipmentDetail", {
         title: "Embarque " + (shipment.reference || shipment._id),
         shipment,
         allocations,
-        availableContainers,
+        bookings,
+        selectedBookingId,
+        bookingContainers,
+        checklistItems,
+        notes,
         statusLabels: SHIPMENT_STATUS_LABELS,
         error: error.message,
       });
     } catch (innerError) {
       next(innerError);
     }
+  }
+});
+
+router.post("/shipments/:id/checklist-items", async (req, res, next) => {
+  try {
+    await checklistItemService.createChecklistItem(
+      { shipment: req.params.id, documentName: req.body.documentName },
+      req.user
+    );
+    res.redirect("/shipments/" + req.params.id);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/checklist-items/:itemId/complete", async (req, res, next) => {
+  try {
+    await checklistItemService.completeChecklistItem(req.params.itemId, req.user);
+    res.redirect("/shipments/" + req.params.id);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/checklist-items/:itemId/delete", async (req, res, next) => {
+  try {
+    await checklistItemService.deleteChecklistItem(req.params.itemId, req.user);
+    res.redirect("/shipments/" + req.params.id);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/shipments/:id/notes", async (req, res, next) => {
+  try {
+    await shipmentNoteService.createUserNote(
+      {
+        shipment: req.params.id,
+        message: req.body.message,
+        visibility: req.body.visibility || undefined,
+      },
+      req.user
+    );
+    res.redirect("/shipments/" + req.params.id);
+  } catch (error) {
+    next(error);
   }
 });
 
@@ -698,6 +795,8 @@ router.get("/shipments/:id/edit", async (req, res, next) => {
         modal: shipment.modal,
         incoterm: shipment.incoterm,
         status: shipment.status,
+        exportStage: shipment.exportStage,
+        importStage: shipment.importStage,
       },
       error: null,
     });
@@ -717,6 +816,8 @@ router.post("/shipments/:id", async (req, res) => {
         modal: req.body.modal,
         incoterm: req.body.incoterm || undefined,
         status: req.body.status !== undefined ? Number(req.body.status) : undefined,
+        exportStage: parseStage(req.body.exportStage),
+        importStage: parseStage(req.body.importStage),
       },
       req.user
     );
@@ -934,6 +1035,15 @@ router.post("/containers", async (req, res) => {
   }
 });
 
+router.post("/containers/:id/allocations/:allocationId/remove", async (req, res, next) => {
+  try {
+    await allocationService.removeAllocation(req.params.allocationId, req.user);
+    res.redirect("/containers/" + req.params.id);
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.get("/containers/:id", async (req, res, next) => {
   try {
     const container = await containerService.getContainerById(req.params.id, req.user);
@@ -1074,7 +1184,6 @@ router.get("/allocations", async (req, res, next) => {
     const filters = {
       shipment: req.query.shipment,
       container: req.query.container,
-      isActive: req.query.isActive,
     };
     const allocations = await allocationService.listAllocations(req.user, filters);
     res.render("allocations", { title: "Alocações", allocations, filters });
@@ -1175,25 +1284,7 @@ router.post("/allocations/:id", async (req, res) => {
 
 router.post("/allocations/:id/delete", async (req, res, next) => {
   try {
-    await allocationService.deactivateAllocation(req.params.id, req.user);
-    res.redirect("/allocations");
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post("/allocations/:id/reactivate", async (req, res, next) => {
-  try {
-    await allocationService.reactivateAllocation(req.params.id, req.user);
-    res.redirect("/allocations");
-  } catch (error) {
-    next(error);
-  }
-});
-
-router.post("/allocations/:id/hard-delete", async (req, res, next) => {
-  try {
-    await allocationService.hardDeleteAllocation(req.params.id, req.user);
+    await allocationService.removeAllocation(req.params.id, req.user);
     res.redirect("/allocations");
   } catch (error) {
     next(error);

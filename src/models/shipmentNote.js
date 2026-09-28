@@ -1,21 +1,48 @@
+const mongoose = require("mongoose");
+
 /**
- * Shipment Note Schema
+ * Append-only activity feed entry for a Shipment: no update, no
+ * delete — the feed IS the Shipment's history, consistent with
+ * the project's "never lose history" principle. See README >
+ * Shipment activity feed.
  *
- * Represents an entry in a Shipment's activity feed, combining
- * system-generated notes and notes written by Users involved in
- * the process.
+ * type: SYSTEM (auto-generated, e.g. a Booking deadline change)
+ * or USER (written manually). visibility: PUBLIC or PRIVATE —
+ * PRIVATE hides the note from ASSIGNED_SHIPMENT viewers (external
+ * carriers/warehouses), but not from SYSTEM/COMPANY viewers.
  *
- * A note has a type, SYSTEM or USER. SYSTEM notes are generated
- * automatically by the application, such as a status change or a
- * Booking deadline update affecting the Shipment through one of
- * its allocated Containers. USER notes are written manually by a
- * User and carry a visibility, PUBLIC or PRIVATE, so that
- * internal remarks are not necessarily exposed to Users with an
- * ASSIGNED_SHIPMENT AccessRole, such as external carriers or
- * warehouses.
+ * stage: which of the Shipment's operational fronts this note
+ * relates to (mirrors ShipmentContainerAllocation.stage). An
+ * ASSIGNED_SHIPMENT viewer only sees notes whose stage matches
+ * the one they're assigned to; a note with no stage is treated
+ * as internal/general and is not shown to ASSIGNED_SHIPMENT
+ * viewers at all, regardless of visibility.
  *
- * A note may optionally reference the Container or Booking it
- * relates to, so a SYSTEM note about a deadline change can point
- * to exactly which Container was affected, since a Shipment may
- * share only part of its Containers with a given Booking.
+ * container/booking: optional context for SYSTEM notes, so a
+ * deadline-change note can point to exactly which Container/
+ * Booking triggered it.
  */
+const shipmentNoteSchema = new mongoose.Schema(
+  {
+    shipment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shipment",
+      required: true,
+    },
+    type: { type: String, enum: ["SYSTEM", "USER"], required: true },
+    visibility: {
+      type: String,
+      enum: ["PUBLIC", "PRIVATE"],
+      required: true,
+      default: "PUBLIC",
+    },
+    stage: { type: String, enum: ["EXPORT", "IMPORT"] },
+    author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    message: { type: String, required: true, trim: true },
+    container: { type: mongoose.Schema.Types.ObjectId, ref: "Container" },
+    booking: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("ShipmentNote", shipmentNoteSchema);

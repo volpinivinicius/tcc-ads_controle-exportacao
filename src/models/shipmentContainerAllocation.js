@@ -17,6 +17,17 @@ const mongoose = require("mongoose");
  * unique, allowing the rare case of the same physical container
  * appearing on both fronts of an INTERCOMPANY shipment as two
  * separate allocation records.
+ *
+ * No isActive / soft delete here, unlike most of the project's
+ * other entities: an Allocation is a link, not a record with its
+ * own meaningful data to preserve — soft-deleting it (isActive:
+ * false) while keeping the (shipment, container, stage) unique
+ * index would permanently block re-allocating that same pair
+ * later, since the inactive row still occupies the index. Removing
+ * an Allocation is therefore a true delete (see
+ * shipmentContainerAllocationService.removeAllocation), which also
+ * generates a SYSTEM ShipmentNote — that note, not an inactive row
+ * here, is what preserves the fact that the link once existed.
  */
 const shipmentContainerAllocationSchema = new mongoose.Schema(
   {
@@ -33,7 +44,6 @@ const shipmentContainerAllocationSchema = new mongoose.Schema(
     stage: { type: String, enum: ["EXPORT", "IMPORT"] },
     weightKg: { type: Number, min: 0 },
     volumeM3: { type: Number, min: 0 },
-    isActive: { type: Boolean, required: true, default: true },
   },
   { timestamps: true }
 );

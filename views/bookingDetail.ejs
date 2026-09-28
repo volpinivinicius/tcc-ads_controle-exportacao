@@ -11,45 +11,17 @@ function fmtDate(d) {
       </div>
 
       <div class="detail-card">
-        <div class="detail-row">
-          <span class="detail-label">Armador</span>
-          <span class="detail-value"><%= booking.carrier %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Navio / Viagem</span>
-          <span class="detail-value"><%= booking.vessel || '—' %><%= booking.voyage ? ' / ' + booking.voyage : '' %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Porto de Origem</span>
-          <span class="detail-value"><%= booking.portOfLoading %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Porto de Destino</span>
-          <span class="detail-value"><%= booking.portOfDischarge %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">ETD</span>
-          <span class="detail-value"><%= fmtDate(booking.estimatedDeparture) %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">ETA</span>
-          <span class="detail-value"><%= fmtDate(booking.estimatedArrival) %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Deadline de Carga</span>
-          <span class="detail-value"><%= fmtDate(booking.cargoCutoff) %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Deadline Documental</span>
-          <span class="detail-value"><%= fmtDate(booking.documentCutoff) %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Containers Solicitados</span>
-          <span class="detail-value"><%= booking.requestedContainers.map(function(c) { return c.quantity + 'x' + c.size; }).join(', ') %></span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-label">Situação</span>
-          <span class="detail-value"><span class="status-badge <%= booking.isActive ? 'status-active' : 'status-inactive' %>"><%= booking.isActive ? 'Ativo' : 'Inativo' %></span></span>
+        <div class="detail-grid">
+          <div class="detail-field"><span class="detail-label">Armador</span><span class="detail-value"><%= booking.carrier %></span></div>
+          <div class="detail-field"><span class="detail-label">Navio / Viagem</span><span class="detail-value"><%= booking.vessel || '—' %><%= booking.voyage ? ' / ' + booking.voyage : '' %></span></div>
+          <div class="detail-field"><span class="detail-label">Porto de Origem</span><span class="detail-value"><%= booking.portOfLoading %></span></div>
+          <div class="detail-field"><span class="detail-label">Porto de Destino</span><span class="detail-value"><%= booking.portOfDischarge %></span></div>
+          <div class="detail-field"><span class="detail-label">ETD</span><span class="detail-value"><%= fmtDate(booking.estimatedDeparture) %></span></div>
+          <div class="detail-field"><span class="detail-label">ETA</span><span class="detail-value"><%= fmtDate(booking.estimatedArrival) %></span></div>
+          <div class="detail-field"><span class="detail-label">Deadline de Carga</span><span class="detail-value"><%= fmtDate(booking.cargoCutoff) %></span></div>
+          <div class="detail-field"><span class="detail-label">Deadline Documental</span><span class="detail-value"><%= fmtDate(booking.documentCutoff) %></span></div>
+          <div class="detail-field"><span class="detail-label">Containers Solicitados</span><span class="detail-value"><%= booking.requestedContainers.map(function(c) { return c.quantity + 'x' + c.size; }).join(', ') %></span></div>
+          <div class="detail-field"><span class="detail-label">Situação</span><span class="detail-value"><span class="status-badge <%= booking.isActive ? 'status-active' : 'status-inactive' %>"><%= booking.isActive ? 'Ativo' : 'Inativo' %></span></span></div>
         </div>
       </div>
 

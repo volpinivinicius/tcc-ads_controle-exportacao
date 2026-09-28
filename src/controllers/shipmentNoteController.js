@@ -1,13 +1,26 @@
 /**
- * Shipment Note Controller
- *
- * Manages the creation, retrieval, update, and removal of notes
- * in a Shipment's activity feed.
- *
- * Enforces that USER notes marked as PRIVATE are only visible to
- * Users authorized to see private notes for that Shipment, while
- * PUBLIC notes and SYSTEM notes are visible to any User with
- * access to the Shipment, respecting their AccessRole's scope
- * (SYSTEM, COMPANY, or ASSIGNED_SHIPMENT, including the per-stage
- * restriction for INTERCOMPANY Shipments).
+ * Append-only: create and list only. See shipmentNoteService for
+ * the stage-aware visibility rules.
  */
+
+const shipmentNoteService = require("../services/shipmentNoteService");
+
+async function create(req, res, next) {
+  try {
+    const note = await shipmentNoteService.createUserNote(req.body, req.user);
+    res.status(201).json(note);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function list(req, res, next) {
+  try {
+    const notes = await shipmentNoteService.listNotes(req.params.id, req.user);
+    res.json(notes);
+  } catch (error) {
+    next(error);
+  }
+}
+
+module.exports = { create, list };

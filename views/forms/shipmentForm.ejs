@@ -48,6 +48,66 @@
           <p class="muted">A classificação (EXPORT/IMPORT/INTERCOMPANY) é calculada automaticamente a partir das empresas selecionadas.</p>
         <% } %>
 
+        <label>Estágio de Exportação (opcional — preencha se este embarque tem uma frente de exportação própria)</label>
+        <fieldset>
+          <legend>exportStage</legend>
+          <label>Transportadora atribuída</label>
+          <select name="exportStage[carrierCompany]">
+            <option value="">—</option>
+            <% companies.forEach(function(c) { %>
+              <option value="<%= c._id %>" <%= shipment && shipment.exportStage && String(shipment.exportStage.carrierCompany) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }); %>
+          </select>
+          <label>Armazém atribuído</label>
+          <select name="exportStage[warehouseCompany]">
+            <option value="">—</option>
+            <% companies.forEach(function(c) { %>
+              <option value="<%= c._id %>" <%= shipment && shipment.exportStage && String(shipment.exportStage.warehouseCompany) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }); %>
+          </select>
+          <label>Status do estágio</label>
+          <select name="exportStage[status]">
+            <option value="">—</option>
+            <% Object.keys(statusLabels).forEach(function(code) { %>
+              <option value="<%= code %>" <%= shipment && shipment.exportStage && String(shipment.exportStage.status) === code ? 'selected' : '' %>><%= code %> - <%= statusLabels[code] %></option>
+            <% }); %>
+          </select>
+          <label>Data planejada</label>
+          <input type="date" name="exportStage[plannedDate]" value="<%= shipment && shipment.exportStage && shipment.exportStage.plannedDate ? new Date(shipment.exportStage.plannedDate).toISOString().slice(0,10) : '' %>" />
+          <label>Data realizada</label>
+          <input type="date" name="exportStage[actualDate]" value="<%= shipment && shipment.exportStage && shipment.exportStage.actualDate ? new Date(shipment.exportStage.actualDate).toISOString().slice(0,10) : '' %>" />
+        </fieldset>
+
+        <label>Estágio de Importação (opcional — preencha se este embarque tem uma frente de importação própria)</label>
+        <fieldset>
+          <legend>importStage</legend>
+          <label>Transportadora atribuída</label>
+          <select name="importStage[carrierCompany]">
+            <option value="">—</option>
+            <% companies.forEach(function(c) { %>
+              <option value="<%= c._id %>" <%= shipment && shipment.importStage && String(shipment.importStage.carrierCompany) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }); %>
+          </select>
+          <label>Armazém atribuído</label>
+          <select name="importStage[warehouseCompany]">
+            <option value="">—</option>
+            <% companies.forEach(function(c) { %>
+              <option value="<%= c._id %>" <%= shipment && shipment.importStage && String(shipment.importStage.warehouseCompany) === String(c._id) ? 'selected' : '' %>><%= c.name %></option>
+            <% }); %>
+          </select>
+          <label>Status do estágio</label>
+          <select name="importStage[status]">
+            <option value="">—</option>
+            <% Object.keys(statusLabels).forEach(function(code) { %>
+              <option value="<%= code %>" <%= shipment && shipment.importStage && String(shipment.importStage.status) === code ? 'selected' : '' %>><%= code %> - <%= statusLabels[code] %></option>
+            <% }); %>
+          </select>
+          <label>Data planejada</label>
+          <input type="date" name="importStage[plannedDate]" value="<%= shipment && shipment.importStage && shipment.importStage.plannedDate ? new Date(shipment.importStage.plannedDate).toISOString().slice(0,10) : '' %>" />
+          <label>Data realizada</label>
+          <input type="date" name="importStage[actualDate]" value="<%= shipment && shipment.importStage && shipment.importStage.actualDate ? new Date(shipment.importStage.actualDate).toISOString().slice(0,10) : '' %>" />
+        </fieldset>
+
         <button type="submit"><%= shipment && shipment._id ? 'Salvar' : 'Criar' %></button>
       </form>
 <%- include('../partials/footer') %>
