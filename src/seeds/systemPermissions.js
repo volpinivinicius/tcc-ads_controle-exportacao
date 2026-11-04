@@ -36,7 +36,9 @@ const catalog = [
   { code: "SHIPMENT_NOTE_CREATE", resource: "SHIPMENT_NOTE", description: "Create shipment notes" },
  
   { code: "SHIPMENT_CHECKLIST_VIEW", resource: "SHIPMENT_CHECKLIST", description: "View shipment checklist items" },
+  { code: "SHIPMENT_CHECKLIST_CREATE", resource: "SHIPMENT_CHECKLIST", description: "Add a document requirement to a shipment's checklist" },
   { code: "SHIPMENT_CHECKLIST_UPDATE", resource: "SHIPMENT_CHECKLIST", description: "Update shipment checklist items" },
+  { code: "SHIPMENT_CHECKLIST_DELETE", resource: "SHIPMENT_CHECKLIST", description: "Remove a document requirement from a shipment's checklist" },
  
   { code: "BOOKING_VIEW", resource: "BOOKING", description: "View bookings" },
   { code: "BOOKING_CREATE", resource: "BOOKING", description: "Create bookings" },

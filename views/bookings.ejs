@@ -24,7 +24,7 @@
           <% } %>
           <% bookings.forEach(function(b) { %>
             <tr>
-              <td><a href="/bookings/<%= b._id %>"><%= b.bookingNumber %></a></td>
+              <td><a href="/bookings/<%= b._id %>" class="code"><%= b.bookingNumber %></a></td>
               <td><%= b.carrier %></td>
               <td><%= b.vessel || '—' %><%= b.voyage ? ' / ' + b.voyage : '' %></td>
               <td><%= b.portOfLoading %> &rarr; <%= b.portOfDischarge %></td>

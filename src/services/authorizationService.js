@@ -61,12 +61,44 @@ function companyIdsWithPermission(user, code) {
     .map((link) => String(link.company?._id || link.company));
 }
 
+/**
+ * Checks an ASSIGNED_SHIPMENT-scoped link specifically — used
+ * where the "owning" company isn't the User's own Company, but a
+ * Company assigned as carrier/warehouse on a specific Shipment
+ * stage (see Shipment > exportStage/importStage). companyIds is
+ * the set of companies assigned to the relevant stage(s).
+ */
+function hasAssignedShipmentPermission(user, code, companyIds = []) {
+  const idSet = new Set(companyIds.filter(Boolean).map(String));
+  return user.links.some(
+    (link) =>
+      isUsableLink(link) &&
+      link.accessRole?.scope === "ASSIGNED_SHIPMENT" &&
+      idSet.has(String(link.company?._id || link.company)) &&
+      link.accessRole.permissions?.some((p) => p.code === code)
+  );
+}
+
+/** Company ids the user holds via an ASSIGNED_SHIPMENT-scoped link with the given permission code. */
+function assignedShipmentCompanyIds(user, code) {
+  return user.links
+    .filter(
+      (link) =>
+        isUsableLink(link) &&
+        link.accessRole?.scope === "ASSIGNED_SHIPMENT" &&
+        link.accessRole.permissions?.some((p) => p.code === code)
+    )
+    .map((link) => String(link.company?._id || link.company));
+}
+
 module.exports = {
   hasSystemPermission,
   hasCompanyPermission,
+  hasAssignedShipmentPermission,
   can,
   forbidden,
   assertCan,
   linkedCompanyIds,
   companyIdsWithPermission,
+  assignedShipmentCompanyIds,
 };

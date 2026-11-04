@@ -35,7 +35,7 @@
           <% companies.forEach(function(c) { %>
             <tr>
               <td><%= c.name %></td>
-              <td><%= c.taxId %></td>
+              <td class="code"><%= c.taxId %></td>
               <td><%= c.country %></td>
               <td><%= c.businessRoles.join(', ') %></td>
               <td><%= c.isGroupCompany ? 'Sim' : 'Não' %></td>

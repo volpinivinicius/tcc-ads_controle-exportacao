@@ -1,28 +1,41 @@
+const mongoose = require("mongoose");
+
 /**
- * Shipment Checklist Item Schema
+ * A single document requirement within a Shipment's checklist.
+ * The set of required documents is not fixed by the system — the
+ * user defines which ones a given Shipment needs. Tracks the
+ * requirement itself, not the document's file content.
  *
- * Represents a single document requirement within a Shipment's
- * document checklist, such as a Bill of Lading, Certificate of
- * Origin, or export declaration.
+ * Marking an item COMPLETED generates a SYSTEM ShipmentNote (see
+ * shipmentChecklistItemService), so the event is also visible in
+ * the shipment's activity history — the checklist item itself can
+ * be deleted if no longer needed (e.g. added by mistake) without
+ * losing that history, since the completion event already lives
+ * in the note.
  *
- * The set of required documents for a Shipment is not fixed by
- * the system; it is defined by the user at the Shipment's
- * creation, who selects which documents that particular process
- * will require. Each Shipment Checklist Item tracks its own
- * status, pending or completed, along with who completed it and
- * when. It tracks the requirement itself, not the document's
- * file content; attaching the actual file is a separate concern.
- *
- * This checklist exists as a dedicated structure, separate from
- * ShipmentNote, so that document tracking can be queried and
- * displayed as a simple checklist rather than parsed out of a
- * free-form activity feed. A completed Shipment Checklist Item
- * may still generate a corresponding SYSTEM ShipmentNote, so the
- * event is also visible in the shipment's activity history.
- *
- * Whether a Shipment can reach status 5
- * (AWAITING_DOCUMENT_ISSUANCE) after shipping depends on whether
- * any Shipment Checklist Item is still pending at that point; if
- * every required document was already completed before shipping,
- * that status is skipped.
+ * Whether Shipment status 5 (AWAITING_DOCUMENT_ISSUANCE) applies
+ * depends on whether any item is still PENDING — exposed as a
+ * helper for the UI/future increments; status changes remain
+ * manual, per the project's status-transition rule.
  */
+const shipmentChecklistItemSchema = new mongoose.Schema(
+  {
+    shipment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Shipment",
+      required: true,
+    },
+    documentName: { type: String, required: true, trim: true },
+    status: {
+      type: String,
+      enum: ["PENDING", "COMPLETED"],
+      required: true,
+      default: "PENDING",
+    },
+    completedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    completedAt: { type: Date },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("ShipmentChecklistItem", shipmentChecklistItemSchema);
